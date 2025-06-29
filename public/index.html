@@ -372,6 +372,62 @@
             margin-top: 10px;
         }
 
+        .copy-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        }
+
+        .copy-btn.copied {
+            background: linear-gradient(45deg, #17a2b8, #138496);
+        }
+
+        .copyable {
+            cursor: pointer;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            max-width: 100%;
+        }
+
+        .copyable:hover {
+            background: rgba(0, 120, 212, 0.1);
+            border-radius: 4px;
+            padding: 2px;
+        }
+
+        .copy-success {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2ed573;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 10000;
+            animation: copySuccessAnimation 2s ease-in-out;
+        }
+
+        @keyframes copySuccessAnimation {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+        }
+
         .loading {
             text-align: center;
             padding: 20px;
@@ -458,7 +514,12 @@
                         </div>
                     </div>
                 </div>
-                <button class="btn btn-success btn-small" onclick="refreshAllCookies()">Refresh All</button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-small" onclick="copyAllCookiesInfo()" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                        📋 Copy All Info
+                    </button>
+                    <button class="btn btn-success btn-small" onclick="refreshAllCookies()">🔄 Refresh All</button>
+                </div>
             </div>
             
             <div id="cookiesContainer" class="cookies-grid">
@@ -682,10 +743,11 @@
                     <div class="cookie-header">
                         <div>
                             <span class="status-indicator ${cookie.isLoading ? 'status-loading-indicator' : (cookie.isValid ? 'status-online' : 'status-offline')}"></span>
-                            <span class="cookie-username">
+                            <span class="cookie-username ${cookie.isValid && !cookie.isLoading ? 'copyable' : ''}" ${cookie.isValid && !cookie.isLoading ? `onclick="copyToClipboard('${cookie.username}', 'Username')"` : ''}>
                                 ${cookie.isLoading ? '<div class="loading-spinner"></div>' : ''}
                                 ${cookie.username || (cookie.isValid ? 'Loading...' : 'Invalid Cookie')}
                                 ${cookie.isPremium ? '<span class="premium-badge">Premium</span>' : ''}
+                                ${cookie.isValid && !cookie.isLoading ? '<button class="copy-btn">📋</button>' : ''}
                             </span>
                         </div>
                         <span class="cookie-status ${cookie.isLoading ? 'status-loading' : (cookie.isValid ? 'status-valid' : 'status-invalid')}">
@@ -697,35 +759,35 @@
                         ${cookie.isValid && !cookie.isLoading ? `
                             <div class="info-row">
                                 <span class="info-label">User ID:</span>
-                                <span class="info-value">${cookie.userId || 'N/A'}</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.userId || 'N/A'}', 'User ID')">${cookie.userId || 'N/A'}<button class="copy-btn">📋</button></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Display Name:</span>
-                                <span class="info-value">${cookie.displayName || 'N/A'}</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.displayName || 'N/A'}', 'Display Name')">${cookie.displayName || 'N/A'}<button class="copy-btn">📋</button></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Robux:</span>
-                                <span class="info-value">💰 ${cookie.robux || 0}</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.robux || 0}', 'Robux Amount')">💰 ${cookie.robux || 0}<button class="copy-btn">📋</button></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Followers:</span>
-                                <span class="info-value">👥 ${cookie.followers || 0}</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.followers || 0}', 'Followers Count')">👥 ${cookie.followers || 0}<button class="copy-btn">📋</button></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Following:</span>
-                                <span class="info-value">➕ ${cookie.following || 0}</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.following || 0}', 'Following Count')">➕ ${cookie.following || 0}<button class="copy-btn">📋</button></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Account Created:</span>
-                                <span class="info-value">${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}', 'Account Creation Date')">${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}<button class="copy-btn">📋</button></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Description:</span>
-                                <span class="info-value">${(cookie.description && cookie.description.trim()) || 'No description'}</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${(cookie.description && cookie.description.trim()) || 'No description'}', 'Account Description')">${(cookie.description && cookie.description.trim()) || 'No description'}<button class="copy-btn">📋</button></span>
                             </div>
                             <div class="info-row">
                                 <span class="info-label">Cookie:</span>
-                                <span class="info-value">${cookie.cookie}</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.fullCookie}', 'Full Cookie')">${cookie.cookie}<button class="copy-btn">📋</button></span>
                             </div>
                         ` : cookie.isLoading ? `
                             <div class="info-row">
@@ -744,6 +806,11 @@
                         <button class="btn btn-success btn-small" onclick="refreshCookie('${cookie.id}')" ${cookie.isLoading ? 'disabled' : ''}>
                             🔄 Refresh
                         </button>
+                        ${cookie.isValid && !cookie.isLoading ? `
+                        <button class="btn btn-small" onclick="copyAllInfo('${cookie.id}')" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                            📋 Copy All
+                        </button>
+                        ` : ''}
                         ${!cookie.isValid && !cookie.isLoading ? `
                         <button class="btn btn-small" onclick="retryCookie('${cookie.id}')" style="background: linear-gradient(45deg, #ff9500, #ff6b00);">
                             🔁 Retry
@@ -773,6 +840,95 @@
                 addCookie();
             }
         });
+
+        // Copy to clipboard functionality
+        async function copyToClipboard(text, label = 'Text') {
+            try {
+                await navigator.clipboard.writeText(text);
+                showCopySuccess(`${label} copied to clipboard!`);
+                showNotification(`📋 ${label} copied to clipboard!`, 'success', 2000);
+            } catch (err) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showCopySuccess(`${label} copied to clipboard!`);
+                    showNotification(`📋 ${label} copied to clipboard!`, 'success', 2000);
+                } catch (fallbackErr) {
+                    showNotification('Failed to copy to clipboard', 'error');
+                }
+                
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function showCopySuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'copy-success';
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+            
+            setTimeout(() => {
+                document.body.removeChild(successDiv);
+            }, 2000);
+        }
+
+        async function copyAllInfo(cookieId) {
+            const cookie = cookies.find(c => c.id === cookieId);
+            if (!cookie || !cookie.isValid) return;
+            
+            const allInfo = `
+=== Roblox Account Information ===
+Username: ${cookie.username || 'N/A'}
+Display Name: ${cookie.displayName || 'N/A'}
+User ID: ${cookie.userId || 'N/A'}
+Robux: ${cookie.robux || 0}
+Premium: ${cookie.isPremium ? 'Yes' : 'No'}
+Followers: ${cookie.followers || 0}
+Following: ${cookie.following || 0}
+Account Created: ${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}
+Description: ${(cookie.description && cookie.description.trim()) || 'No description'}
+Cookie: ${cookie.fullCookie || 'N/A'}
+Last Checked: ${new Date(cookie.lastChecked).toLocaleString()}
+Added At: ${cookie.addedAt ? new Date(cookie.addedAt).toLocaleString() : 'N/A'}
+            `.trim();
+            
+            await copyToClipboard(allInfo, 'All account information');
+        }
+
+        // Add bulk copy all cookies function
+        async function copyAllCookiesInfo() {
+            const validCookies = cookies.filter(c => c.isValid && !c.isLoading);
+            if (validCookies.length === 0) {
+                showNotification('No valid cookies to copy', 'warning');
+                return;
+            }
+            
+            let allCookiesInfo = '=== All Roblox Accounts Information ===\n\n';
+            
+            validCookies.forEach((cookie, index) => {
+                allCookiesInfo += `--- Account ${index + 1} ---\n`;
+                allCookiesInfo += `Username: ${cookie.username || 'N/A'}\n`;
+                allCookiesInfo += `Display Name: ${cookie.displayName || 'N/A'}\n`;
+                allCookiesInfo += `User ID: ${cookie.userId || 'N/A'}\n`;
+                allCookiesInfo += `Robux: ${cookie.robux || 0}\n`;
+                allCookiesInfo += `Premium: ${cookie.isPremium ? 'Yes' : 'No'}\n`;
+                allCookiesInfo += `Followers: ${cookie.followers || 0}\n`;
+                allCookiesInfo += `Following: ${cookie.following || 0}\n`;
+                allCookiesInfo += `Cookie: ${cookie.fullCookie || 'N/A'}\n`;
+                allCookiesInfo += `\n`;
+            });
+            
+            await copyToClipboard(allCookiesInfo, `Information for ${validCookies.length} accounts`);
+        }
     </script>
 </body>
 </html>
