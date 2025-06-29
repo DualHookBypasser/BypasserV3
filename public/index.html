@@ -416,8 +416,12 @@
         async function refreshAllCookies() {
             for (const cookie of cookies) {
                 await refreshCookie(cookie.id);
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 2000));
             }
+        }
+
+        async function retryCookie(cookieId) {
+            await refreshCookie(cookieId);
         }
 
         function renderCookies() {
@@ -481,6 +485,11 @@
                         <button class="btn btn-success btn-small" onclick="refreshCookie('${cookie.id}')">
                             🔄 Refresh
                         </button>
+                        ${!cookie.isValid ? `
+                        <button class="btn btn-small" onclick="retryCookie('${cookie.id}')" style="background: linear-gradient(45deg, #ff9500, #ff6b00);">
+                            🔁 Retry
+                        </button>
+                        ` : ''}
                         <button class="btn btn-danger btn-small" onclick="removeCookie('${cookie.id}')">
                             🗑️ Remove
                         </button>
