@@ -81,7 +81,7 @@ async function getRobloxUserInfo(cookie) {
         }
         
         return {
-            id: userId,
+            userId: userId,
             username: username,
             displayName: displayName,
             description: detailsResponse.data.description,
