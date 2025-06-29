@@ -33,6 +33,7 @@
             color: white;
             padding: 30px;
             text-align: center;
+            position: relative;
         }
 
         .header h1 {
@@ -43,6 +44,69 @@
         .header p {
             font-size: 1.1rem;
             opacity: 0.9;
+        }
+
+        .connection-status {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2ed573;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.disconnected {
+            background: #ff4757;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .notifications {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 350px;
+        }
+
+        .notification {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-left: 4px solid #0078D4;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            border-left-color: #2ed573;
+        }
+
+        .notification.error {
+            border-left-color: #ff4757;
+        }
+
+        .notification.warning {
+            border-left-color: #ffa502;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         .add-cookie-section {
@@ -84,6 +148,8 @@
             font-size: 16px;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
         }
 
         .btn:hover {
@@ -93,6 +159,12 @@
 
         .btn:active {
             transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-small {
@@ -108,13 +180,49 @@
             background: linear-gradient(45deg, #2ed573, #1e90ff);
         }
 
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #0078D4;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .cookies-section {
             padding: 30px;
         }
 
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
         .cookies-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
@@ -125,6 +233,7 @@
             padding: 20px;
             background: #fafafa;
             transition: border-color 0.3s, transform 0.2s;
+            position: relative;
         }
 
         .cookie-card:hover {
@@ -142,9 +251,23 @@
             background: #fff5f5;
         }
 
+        .cookie-card.loading {
+            border-color: #ffa502;
+            background: #fffbf0;
+        }
+
+        .cookie-card.new-cookie {
+            animation: newCookieGlow 2s ease-in-out;
+        }
+
+        @keyframes newCookieGlow {
+            0%, 100% { box-shadow: 0 0 0 rgba(0, 162, 255, 0); }
+            50% { box-shadow: 0 0 20px rgba(0, 162, 255, 0.6); }
+        }
+
         .cookie-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
@@ -153,6 +276,19 @@
             font-size: 1.3rem;
             font-weight: 600;
             color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .premium-badge {
+            background: linear-gradient(45deg, #ffd700, #ff8c00);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
         .cookie-status {
@@ -170,6 +306,11 @@
 
         .status-invalid {
             background: #ff4757;
+            color: white;
+        }
+
+        .status-loading {
+            background: #ffa502;
             color: white;
         }
 
@@ -191,6 +332,9 @@
 
         .info-value {
             color: #333;
+            text-align: right;
+            max-width: 60%;
+            word-wrap: break-word;
         }
 
         .cookie-actions {
@@ -215,6 +359,11 @@
         .status-offline {
             background: #ff4757;
             box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+        }
+
+        .status-loading-indicator {
+            background: #ffa502;
+            box-shadow: 0 0 10px rgba(255, 165, 2, 0.5);
         }
 
         .last-checked {
@@ -259,12 +408,24 @@
             .container {
                 margin: 10px;
             }
+            
+            .section-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="notifications" id="notifications"></div>
+    
     <div class="container">
         <div class="header">
+            <div class="connection-status">
+                <div class="status-dot" id="connectionDot"></div>
+                <span id="connectionText">Connected</span>
+            </div>
             <h1>🍪 Roblox Cookie Refresher</h1>
             <p>Automatically monitor and refresh your Roblox account information in real-time</p>
         </div>
@@ -275,12 +436,28 @@
                 <label for="cookieInput">Roblox .ROBLOSECURITY Cookie:</label>
                 <input type="password" id="cookieInput" placeholder="Enter your .ROBLOSECURITY cookie value here...">
             </div>
-            <button class="btn" onclick="addCookie()">Add Cookie</button>
+            <button class="btn" id="addBtn" onclick="addCookie()">Add Cookie</button>
         </div>
 
         <div class="cookies-section">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>Active Cookies (<span id="cookieCount">0</span>)</h2>
+            <div class="section-header">
+                <div>
+                    <h2>Active Cookies (<span id="cookieCount">0</span>)</h2>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <span class="status-indicator status-online"></span>
+                            <span>Valid: <span id="validCount">0</span></span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="status-indicator status-offline"></span>
+                            <span>Invalid: <span id="invalidCount">0</span></span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="status-indicator status-loading-indicator"></span>
+                            <span>Loading: <span id="loadingCount">0</span></span>
+                        </div>
+                    </div>
+                </div>
                 <button class="btn btn-success btn-small" onclick="refreshAllCookies()">Refresh All</button>
             </div>
             
@@ -293,6 +470,7 @@
     <script>
         let ws;
         let cookies = [];
+        let connectionStatus = false;
 
         // Initialize WebSocket connection
         function initWebSocket() {
@@ -301,6 +479,8 @@
             
             ws.onopen = function() {
                 console.log('WebSocket connected');
+                connectionStatus = true;
+                updateConnectionStatus();
             };
             
             ws.onmessage = function(event) {
@@ -310,12 +490,42 @@
             
             ws.onclose = function() {
                 console.log('WebSocket disconnected, attempting to reconnect...');
+                connectionStatus = false;
+                updateConnectionStatus();
                 setTimeout(initWebSocket, 3000);
             };
             
             ws.onerror = function(error) {
                 console.error('WebSocket error:', error);
+                connectionStatus = false;
+                updateConnectionStatus();
             };
+        }
+
+        function updateConnectionStatus() {
+            const dot = document.getElementById('connectionDot');
+            const text = document.getElementById('connectionText');
+            
+            if (connectionStatus) {
+                dot.classList.remove('disconnected');
+                text.textContent = 'Connected';
+            } else {
+                dot.classList.add('disconnected');
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        function showNotification(message, type = 'info', duration = 5000) {
+            const container = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, duration);
         }
 
         function handleWebSocketMessage(data) {
@@ -327,6 +537,16 @@
                 case 'cookieAdded':
                     cookies.push(data.cookie);
                     renderCookies();
+                    // Highlight new cookie
+                    setTimeout(() => {
+                        const cookieCard = document.querySelector(`[data-cookie-id="${data.cookie.id}"]`);
+                        if (cookieCard) {
+                            cookieCard.classList.add('new-cookie');
+                            setTimeout(() => {
+                                cookieCard.classList.remove('new-cookie');
+                            }, 2000);
+                        }
+                    }, 100);
                     break;
                 case 'cookieUpdate':
                     const index = cookies.findIndex(c => c.id === data.cookie.id);
@@ -339,17 +559,24 @@
                     cookies = cookies.filter(c => c.id !== data.cookieId);
                     renderCookies();
                     break;
+                case 'notification':
+                    showNotification(data.message, data.level);
+                    break;
             }
         }
 
         async function addCookie() {
             const cookieInput = document.getElementById('cookieInput');
+            const addBtn = document.getElementById('addBtn');
             const cookie = cookieInput.value.trim();
             
             if (!cookie) {
-                alert('Please enter a cookie value');
+                showNotification('Please enter a cookie value', 'error');
                 return;
             }
+            
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<div class="loading-spinner"></div>Adding...';
             
             try {
                 const response = await fetch('/api/add-cookie', {
@@ -364,12 +591,15 @@
                 
                 if (result.success) {
                     cookieInput.value = '';
-                    showAlert('Cookie added successfully!', 'success');
+                    showNotification('Cookie is being validated...', 'info');
                 } else {
-                    showAlert('Failed to add cookie: ' + result.error, 'error');
+                    showNotification('Failed to add cookie: ' + result.error, 'error');
                 }
             } catch (error) {
-                showAlert('Error adding cookie: ' + error.message, 'error');
+                showNotification('Error adding cookie: ' + error.message, 'error');
+            } finally {
+                addBtn.disabled = false;
+                addBtn.innerHTML = 'Add Cookie';
             }
         }
 
@@ -382,12 +612,12 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showAlert('Cookie refreshed successfully!', 'success');
+                    showNotification('Cookie refreshed successfully!', 'success');
                 } else {
-                    showAlert('Failed to refresh cookie', 'error');
+                    showNotification('Failed to refresh cookie', 'error');
                 }
             } catch (error) {
-                showAlert('Error refreshing cookie: ' + error.message, 'error');
+                showNotification('Error refreshing cookie: ' + error.message, 'error');
             }
         }
 
@@ -404,16 +634,17 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showAlert('Cookie removed successfully!', 'success');
+                    showNotification('Cookie removed successfully!', 'success');
                 } else {
-                    showAlert('Failed to remove cookie', 'error');
+                    showNotification('Failed to remove cookie', 'error');
                 }
             } catch (error) {
-                showAlert('Error removing cookie: ' + error.message, 'error');
+                showNotification('Error removing cookie: ' + error.message, 'error');
             }
         }
 
         async function refreshAllCookies() {
+            showNotification('Refreshing all cookies...', 'info');
             for (const cookie of cookies) {
                 await refreshCookie(cookie.id);
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -427,8 +658,19 @@
         function renderCookies() {
             const container = document.getElementById('cookiesContainer');
             const countElement = document.getElementById('cookieCount');
+            const validCountElement = document.getElementById('validCount');
+            const invalidCountElement = document.getElementById('invalidCount');
+            const loadingCountElement = document.getElementById('loadingCount');
             
             countElement.textContent = cookies.length;
+            
+            const validCookies = cookies.filter(c => c.isValid === true);
+            const invalidCookies = cookies.filter(c => c.isValid === false);
+            const loadingCookies = cookies.filter(c => c.isLoading === true || c.isValid === null);
+            
+            validCountElement.textContent = validCookies.length;
+            invalidCountElement.textContent = invalidCookies.length;
+            loadingCountElement.textContent = loadingCookies.length;
             
             if (cookies.length === 0) {
                 container.innerHTML = '<div class="loading">No cookies added yet. Add a cookie above to get started!</div>';
@@ -436,19 +678,23 @@
             }
             
             container.innerHTML = cookies.map(cookie => `
-                <div class="cookie-card ${cookie.isValid ? 'valid' : 'invalid'}">
+                <div class="cookie-card ${cookie.isLoading ? 'loading' : (cookie.isValid ? 'valid' : 'invalid')}" data-cookie-id="${cookie.id}">
                     <div class="cookie-header">
                         <div>
-                            <span class="status-indicator ${cookie.isValid ? 'status-online' : 'status-offline'}"></span>
-                            <span class="cookie-username">${cookie.username || (cookie.isValid ? 'Loading...' : 'Invalid Cookie')}</span>
+                            <span class="status-indicator ${cookie.isLoading ? 'status-loading-indicator' : (cookie.isValid ? 'status-online' : 'status-offline')}"></span>
+                            <span class="cookie-username">
+                                ${cookie.isLoading ? '<div class="loading-spinner"></div>' : ''}
+                                ${cookie.username || (cookie.isValid ? 'Loading...' : 'Invalid Cookie')}
+                                ${cookie.isPremium ? '<span class="premium-badge">Premium</span>' : ''}
+                            </span>
                         </div>
-                        <span class="cookie-status ${cookie.isValid ? 'status-valid' : 'status-invalid'}">
-                            ${cookie.isValid ? 'Valid' : 'Invalid'}
+                        <span class="cookie-status ${cookie.isLoading ? 'status-loading' : (cookie.isValid ? 'status-valid' : 'status-invalid')}">
+                            ${cookie.isLoading ? 'Loading' : (cookie.isValid ? 'Valid' : 'Invalid')}
                         </span>
                     </div>
                     
                     <div class="cookie-info">
-                        ${cookie.isValid ? `
+                        ${cookie.isValid && !cookie.isLoading ? `
                             <div class="info-row">
                                 <span class="info-label">User ID:</span>
                                 <span class="info-value">${cookie.userId || 'N/A'}</span>
@@ -462,6 +708,14 @@
                                 <span class="info-value">💰 ${cookie.robux || 0}</span>
                             </div>
                             <div class="info-row">
+                                <span class="info-label">Followers:</span>
+                                <span class="info-value">👥 ${cookie.followers || 0}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Following:</span>
+                                <span class="info-value">➕ ${cookie.following || 0}</span>
+                            </div>
+                            <div class="info-row">
                                 <span class="info-label">Account Created:</span>
                                 <span class="info-value">${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}</span>
                             </div>
@@ -473,6 +727,11 @@
                                 <span class="info-label">Cookie:</span>
                                 <span class="info-value">${cookie.cookie}</span>
                             </div>
+                        ` : cookie.isLoading ? `
+                            <div class="info-row">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value">Fetching account information...</span>
+                            </div>
                         ` : `
                             <div class="info-row">
                                 <span class="info-label">Error:</span>
@@ -482,37 +741,25 @@
                     </div>
                     
                     <div class="cookie-actions">
-                        <button class="btn btn-success btn-small" onclick="refreshCookie('${cookie.id}')">
+                        <button class="btn btn-success btn-small" onclick="refreshCookie('${cookie.id}')" ${cookie.isLoading ? 'disabled' : ''}>
                             🔄 Refresh
                         </button>
-                        ${!cookie.isValid ? `
+                        ${!cookie.isValid && !cookie.isLoading ? `
                         <button class="btn btn-small" onclick="retryCookie('${cookie.id}')" style="background: linear-gradient(45deg, #ff9500, #ff6b00);">
                             🔁 Retry
                         </button>
                         ` : ''}
-                        <button class="btn btn-danger btn-small" onclick="removeCookie('${cookie.id}')">
+                        <button class="btn btn-danger btn-small" onclick="removeCookie('${cookie.id}')" ${cookie.isLoading ? 'disabled' : ''}>
                             🗑️ Remove
                         </button>
                     </div>
                     
                     <div class="last-checked">
+                        ${cookie.addedAt ? `Added: ${new Date(cookie.addedAt).toLocaleString()} • ` : ''}
                         Last checked: ${new Date(cookie.lastChecked).toLocaleString()}
                     </div>
                 </div>
             `).join('');
-        }
-
-        function showAlert(message, type) {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.textContent = message;
-            
-            const container = document.querySelector('.add-cookie-section');
-            container.insertBefore(alertDiv, container.firstChild);
-            
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 5000);
         }
 
         // Initialize when page loads

