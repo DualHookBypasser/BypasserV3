@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -748,7 +747,12 @@
     </div>
 
     <script>
-        let ws;
+        // Static mode - no WebSocket connection needed
+        function connectWebSocket() {
+            // For static deployment, we don't use WebSocket
+            updateConnectionStatus(true);
+            loadCookies();
+        }
         let cookies = [];
         let connectionStatus = false;
 
@@ -1019,37 +1023,26 @@
                 return;
             }
 
-            addBtn.disabled = true;
-            addBtn.innerHTML = '<div class="loading-spinner"></div>Adding...';
+            // For static deployment, store cookies locally
+            const cookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
+            const cookieId = Date.now().toString();
 
-            try {
-                const response = await fetch('/api/add-cookie', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ cookie })
-                });
+            const newCookie = {
+                id: cookieId,
+                fullCookie: cookie,
+                cookie: cookie.substring(0, 20) + '...',
+                isValid: null,
+                isLoading: true,
+                username: 'Loading...',
+                addedAt: new Date().toISOString()
+            };
 
-                const result = await response.json();
+            cookies.push(newCookie);
+            localStorage.setItem('robloxCookies', JSON.stringify(cookies));
 
-                if (result.success) {
-                    cookieInput.value = '';
-                    showNotification('Cookie is being validated...', 'info');
-                     // If using polling, refresh the list immediately
-                    if (pollingInterval) {
-                        loadCookies();
-                    }
-
-                } else {
-                    showNotification('Failed to add cookie: ' + result.error, 'error');
-                }
-            } catch (error) {
-                showNotification('Error adding cookie: ' + error.message, 'error');
-            } finally {
-                addBtn.disabled = false;
-                addBtn.innerHTML = '<span>🚀</span>Add Cookie';
-            }
+            cookieInput.value = '';
+            showNotification('Cookie added successfully!', 'success');
+            loadCookies();
         }
 
         async function refreshCookie(cookieId) {
@@ -1220,7 +1213,7 @@
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Try WebSocket first, will fall back to polling if needed
-            initWebSocket();
+             connectWebSocket();
 
             // Allow Enter key to submit cookie
             document.getElementById('cookieInput').addEventListener('keypress', function(e) {
