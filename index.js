@@ -851,8 +851,7 @@ app.delete('/api/remove-cookie/:id', (req, res) => {
 });
 
 app.get('/api/cookies', (req, res) => {
-    res.json(```text
-Array.from(activeCookies.values()));
+    res.json(Array.from(activeCookies.values()));
 });
 
 const PORT = process.env.PORT || 5000;
