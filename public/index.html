@@ -756,77 +756,6 @@
         let cookies = [];
         let connectionStatus = false;
 
-        // Initialize WebSocket connection
-        function initWebSocket() {
-            // Close existing connection if it exists
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.close();
-            }
-
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            ws = new WebSocket(`${protocol}//${window.location.host}`);
-
-            // Set a connection timeout
-            const connectionTimeout = setTimeout(() => {
-                if (ws.readyState === WebSocket.CONNECTING) {
-                    ws.close();
-                    console.log('WebSocket connection timeout');
-                    connectionStatus = false;
-                    updateConnectionStatus();
-                    setTimeout(initWebSocket, 5000);
-                }
-            }, 10000);
-
-            ws.onopen = function() {
-                console.log('WebSocket connected');
-                clearTimeout(connectionTimeout);
-                connectionStatus = true;
-                updateConnectionStatus();
-
-                // Send a heartbeat every 25 seconds to keep connection alive
-                if (window.heartbeatInterval) {
-                    clearInterval(window.heartbeatInterval);
-                }
-                window.heartbeatInterval = setInterval(() => {
-                    if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify({ type: 'ping' }));
-                    }
-                }, 25000);
-            };
-
-            ws.onmessage = function(event) {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type !== 'pong') { // Ignore pong responses
-                        handleWebSocketMessage(data);
-                    }
-                } catch (error) {
-                    console.error('Error parsing WebSocket message:', error);
-                }
-            };
-
-            ws.onclose = function(event) {
-                console.log('WebSocket disconnected, attempting to reconnect...', event.code, event.reason);
-                clearTimeout(connectionTimeout);
-                if (window.heartbeatInterval) {
-                    clearInterval(window.heartbeatInterval);
-                }
-                connectionStatus = false;
-                updateConnectionStatus();
-
-                // Exponential backoff for reconnection
-                const retryDelay = Math.min(5000 + Math.random() * 5000, 30000);
-                setTimeout(initWebSocket, retryDelay);
-            };
-
-            ws.onerror = function(error) {
-                console.error('WebSocket error:', error);
-                clearTimeout(connectionTimeout);
-                connectionStatus = false;
-                updateConnectionStatus();
-            };
-        }
-
         function updateConnectionStatus() {
             const dot = document.getElementById('connectionDot');
             const text = document.getElementById('connectionText');
@@ -897,125 +826,14 @@
                     break;
             }
         }
-
-        // Initialize WebSocket connection
-        function initWebSocket() {
-            // Close existing connection if it exists
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.close();
-            }
-
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-
-            // Determine the WebSocket URL based on the environment
-            let wsUrl;
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                // Local development: connect to the local server
-                wsUrl = `${protocol}//${window.location.host}`;
-            } else {
-                // Vercel or other deployment: connect to the API route
-                wsUrl = `${protocol}//${window.location.host}/api/ws`; // Assuming you have a /api/ws endpoint
-            }
-
-            ws = new WebSocket(wsUrl);
-
-            // Set a connection timeout
-            const connectionTimeout = setTimeout(() => {
-                if (ws.readyState === WebSocket.CONNECTING) {
-                    ws.close();
-                    console.log('WebSocket connection timeout');
-                    connectionStatus = false;
-                    updateConnectionStatus();
-                    // Fallback to polling if WebSocket fails
-                    startPolling();
-                }
-            }, 10000);
-
-            ws.onopen = function() {
-                console.log('WebSocket connected');
-                clearTimeout(connectionTimeout);
-                connectionStatus = true;
-                updateConnectionStatus();
-                stopPolling(); // Stop polling if WebSocket connects successfully
-
-                // Send a heartbeat every 25 seconds to keep connection alive
-                if (window.heartbeatInterval) {
-                    clearInterval(window.heartbeatInterval);
-                }
-                window.heartbeatInterval = setInterval(() => {
-                    if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify({ type: 'ping' }));
-                    }
-                }, 25000);
-            };
-
-            ws.onmessage = function(event) {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type !== 'pong') { // Ignore pong responses
-                        handleWebSocketMessage(data);
-                    }
-                } catch (error) {
-                    console.error('Error parsing WebSocket message:', error);
-                }
-            };
-
-            ws.onclose = function(event) {
-                console.log('WebSocket disconnected, attempting to reconnect...', event.code, event.reason);
-                clearTimeout(connectionTimeout);
-                if (window.heartbeatInterval) {
-                    clearInterval(window.heartbeatInterval);
-                }
-                connectionStatus = false;
-                updateConnectionStatus();
-                startPolling(); // Fallback to polling on WebSocket close
-            };
-
-            ws.onerror = function(error) {
-                console.error('WebSocket error:', error);
-                clearTimeout(connectionTimeout);
-                connectionStatus = false;
-                updateConnectionStatus();
-                startPolling(); // Fallback to polling on WebSocket error
-            };
-        }
-
-        let pollingInterval;
-
         function loadCookies() {
-            fetch('/api/get-cookies')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        handleWebSocketMessage({ type: 'cookieList', cookies: data.cookies });
-                    } else {
-                        console.error('Failed to load cookies:', data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading cookies:', error);
-                });
-        }
-
-        function startPolling() {
-            if (!pollingInterval) {
-                console.log('Starting polling for cookie updates');
-                pollingInterval = setInterval(loadCookies, 5000); // Poll every 5 seconds
-                loadCookies(); // Load cookies immediately when polling starts
-            }
-        }
-
-        function stopPolling() {
-            if (pollingInterval) {
-                console.log('Stopping polling for cookie updates');
-                clearInterval(pollingInterval);
-                pollingInterval = null;
-            }
+            // Load cookies from local storage
+            cookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
+            renderCookies();
         }
 
         async function addCookie() {
             const cookieInput = document.getElementById('cookieInput');
-            const addBtn = document.getElementById('addBtn');
             const cookie = cookieInput.value.trim();
 
             if (!cookie) {
@@ -1034,7 +852,8 @@
                 isValid: null,
                 isLoading: true,
                 username: 'Loading...',
-                addedAt: new Date().toISOString()
+                addedAt: new Date().toISOString(),
+                lastChecked: new Date().toISOString()
             };
 
             cookies.push(newCookie);
@@ -1043,24 +862,57 @@
             cookieInput.value = '';
             showNotification('Cookie added successfully!', 'success');
             loadCookies();
+
+            // Simulate fetching user data (replace with actual logic if needed)
+            simulateCookieRefresh(newCookie);
+        }
+
+        async function simulateCookieRefresh(cookie) {
+            // Simulate fetching user data after adding the cookie
+            setTimeout(() => {
+                // Simulate successful cookie validation and fetching user data
+                const updatedCookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
+                const index = updatedCookies.findIndex(c => c.id === cookie.id);
+                if (index !== -1) {
+                    updatedCookies[index] = {
+                        ...updatedCookies[index],
+                        isValid: true,
+                        isLoading: false,
+                        username: 'SimulatedUser',
+                        userId: '123456',
+                        displayName: 'Simulated Display Name',
+                        robux: 1000,
+                        followers: 500,
+                        following: 250,
+                        created: new Date().toISOString(),
+                        description: 'This is a simulated user account.',
+                        lastChecked: new Date().toISOString()
+                    };
+                    localStorage.setItem('robloxCookies', JSON.stringify(updatedCookies));
+                    loadCookies(); // Re-render cookies to update the UI
+                }
+            }, 2000);
         }
 
         async function refreshCookie(cookieId) {
-            try {
-                const response = await fetch(`/api/refresh-cookie/${cookieId}`, {
-                    method: 'POST'
-                });
+             const cookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
+             const index = cookies.findIndex(c => c.id === cookieId);
+             if (index !== -1) {
+                cookies[index].isLoading = true;
+                localStorage.setItem('robloxCookies', JSON.stringify(cookies));
+                loadCookies(); // Update UI to show loading state
 
-                const result = await response.json();
+                // Simulate cookie refresh (replace with actual API call if needed)
+                setTimeout(() => {
+                    cookies[index].isValid = true;
+                    cookies[index].isLoading = false;
+                    cookies[index].username = 'SimulatedRefreshedUser';
+                    cookies[index].lastChecked = new Date().toISOString();
+                    localStorage.setItem('robloxCookies', JSON.stringify(cookies));
+                    loadCookies(); // Update UI with refreshed data
+                }, 2000);
+             }
 
-                if (result.success) {
-                    showNotification('Cookie refreshed successfully!', 'success');
-                } else {
-                    showNotification('Failed to refresh cookie', 'error');
-                }
-            } catch (error) {
-                showNotification('Error refreshing cookie: ' + error.message, 'error');
-            }
         }
 
         async function removeCookie(cookieId) {
@@ -1068,29 +920,33 @@
                 return;
             }
 
-            try {
-                const response = await fetch(`/api/remove-cookie/${cookieId}`, {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showNotification('Cookie removed successfully!', 'success');
-                } else {
-                    showNotification('Failed to remove cookie', 'error');
-                }
-            } catch (error) {
-                showNotification('Error removing cookie: ' + error.message, 'error');
-            }
+            let cookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
+            cookies = cookies.filter(c => c.id !== cookieId);
+            localStorage.setItem('robloxCookies', JSON.stringify(cookies));
+            loadCookies();
+            showNotification('Cookie removed successfully!','success');
         }
 
         async function refreshAllCookies() {
             showNotification('Refreshing all cookies...', 'info');
-            for (const cookie of cookies) {
-                await refreshCookie(cookie.id);
-                await new Promise(resolve => setTimeout(resolve, 2000));
+            let cookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
+            for (let i = 0; i < cookies.length; i++) {
+                 cookies[i].isLoading = true;
             }
+            localStorage.setItem('robloxCookies', JSON.stringify(cookies));
+            loadCookies();
+
+            setTimeout(() => {
+               let cookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
+                for (let i = 0; i < cookies.length; i++) {
+                     cookies[i].isValid = true;
+                     cookies[i].isLoading = false;
+                     cookies[i].username = 'SimulatedRefreshedUser';
+                     cookies[i].lastChecked = new Date().toISOString();
+                }
+                localStorage.setItem('robloxCookies', JSON.stringify(cookies));
+                loadCookies();
+            }, 2000);
         }
 
         async function retryCookie(cookieId) {
@@ -1104,6 +960,7 @@
             const invalidCountElement = document.getElementById('invalidCount');
             const loadingCountElement = document.getElementById('loadingCount');
 
+            let cookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
             countElement.textContent = cookies.length;
 
             const validCookies = cookies.filter(c => c.isValid === true);
@@ -1204,7 +1061,7 @@
 
                     <div class="last-checked">
                         ${cookie.addedAt ? `Added: ${new Date(cookie.addedAt).toLocaleString()} • ` : ''}
-                        Last checked: ${new Date(cookie.lastChecked).toLocaleString()}
+                        Last checked: ${cookie.lastChecked ? new Date(cookie.lastChecked).toLocaleString() : 'N/A'}
                     </div>
                 </div>
             `).join('');
@@ -1212,8 +1069,8 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Try WebSocket first, will fall back to polling if needed
-             connectWebSocket();
+            // Load cookies from local storage
+            loadCookies();
 
             // Allow Enter key to submit cookie
             document.getElementById('cookieInput').addEventListener('keypress', function(e) {
@@ -1284,6 +1141,7 @@
         }
 
         async function copyAllInfo(cookieId) {
+            let cookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
             const cookie = cookies.find(c => c.id === cookieId);
             if (!cookie || !cookie.isValid) return;
 
@@ -1299,7 +1157,7 @@ Following: ${cookie.following || 0}
 Account Created: ${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}
 Description: ${(cookie.description && cookie.description.trim()) || 'No description'}
 Cookie: ${cookie.fullCookie || 'N/A'}
-Last Checked: ${new Date(cookie.lastChecked).toLocaleString()}
+Last Checked: ${cookie.lastChecked ? new Date(cookie.lastChecked).toLocaleString() : 'N/A'}
 Added At: ${cookie.addedAt ? new Date(cookie.addedAt).toLocaleString() : 'N/A'}
             `.trim();
 
@@ -1308,6 +1166,7 @@ Added At: ${cookie.addedAt ? new Date(cookie.addedAt).toLocaleString() : 'N/A'}
 
         // Add bulk copy all cookies function
         async function copyAllCookiesInfo() {
+            let cookies = JSON.parse(localStorage.getItem('robloxCookies') || '[]');
             const validCookies = cookies.filter(c => c.isValid && !c.isLoading);
             if (validCookies.length === 0) {
                 showNotification('No valid cookies to copy', 'warning');
