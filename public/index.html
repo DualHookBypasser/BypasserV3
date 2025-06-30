@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -532,15 +531,15 @@
             .cookies-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .header h1 {
                 font-size: 2rem;
             }
-            
+
             .container {
                 margin: 10px;
             }
-            
+
             .section-header {
                 flex-direction: column;
                 gap: 10px;
@@ -551,7 +550,7 @@
 </head>
 <body>
     <div class="notifications" id="notifications"></div>
-    
+
     <div class="container">
         <div class="header">
             <div class="connection-status">
@@ -601,7 +600,7 @@
                     <button class="btn btn-success btn-small" onclick="refreshAllCookies()">🔄 Refresh All</button>
                 </div>
             </div>
-            
+
             <div id="cookiesContainer" class="cookies-grid">
                 <div class="loading">No cookies added yet. Add a cookie above to get started!</div>
             </div>
@@ -619,10 +618,10 @@
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.close();
             }
-            
+
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${protocol}//${window.location.host}`);
-            
+
             // Set a connection timeout
             const connectionTimeout = setTimeout(() => {
                 if (ws.readyState === WebSocket.CONNECTING) {
@@ -633,13 +632,13 @@
                     setTimeout(initWebSocket, 5000);
                 }
             }, 10000);
-            
+
             ws.onopen = function() {
                 console.log('WebSocket connected');
                 clearTimeout(connectionTimeout);
                 connectionStatus = true;
                 updateConnectionStatus();
-                
+
                 // Send a heartbeat every 25 seconds to keep connection alive
                 if (window.heartbeatInterval) {
                     clearInterval(window.heartbeatInterval);
@@ -650,7 +649,7 @@
                     }
                 }, 25000);
             };
-            
+
             ws.onmessage = function(event) {
                 try {
                     const data = JSON.parse(event.data);
@@ -661,7 +660,7 @@
                     console.error('Error parsing WebSocket message:', error);
                 }
             };
-            
+
             ws.onclose = function(event) {
                 console.log('WebSocket disconnected, attempting to reconnect...', event.code, event.reason);
                 clearTimeout(connectionTimeout);
@@ -670,12 +669,12 @@
                 }
                 connectionStatus = false;
                 updateConnectionStatus();
-                
+
                 // Exponential backoff for reconnection
                 const retryDelay = Math.min(5000 + Math.random() * 5000, 30000);
                 setTimeout(initWebSocket, retryDelay);
             };
-            
+
             ws.onerror = function(error) {
                 console.error('WebSocket error:', error);
                 clearTimeout(connectionTimeout);
@@ -687,7 +686,7 @@
         function updateConnectionStatus() {
             const dot = document.getElementById('connectionDot');
             const text = document.getElementById('connectionText');
-            
+
             if (connectionStatus) {
                 dot.classList.remove('disconnected');
                 text.textContent = 'Connected';
@@ -702,9 +701,9 @@
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
             notification.textContent = message;
-            
+
             container.appendChild(notification);
-            
+
             setTimeout(() => {
                 notification.remove();
             }, duration);
@@ -759,15 +758,15 @@
             const cookieInput = document.getElementById('cookieInput');
             const addBtn = document.getElementById('addBtn');
             const cookie = cookieInput.value.trim();
-            
+
             if (!cookie) {
-                showNotification('Please enter a cookie value', 'error');
+                showNotification('Please enter a cookie', 'error');
                 return;
             }
-            
+
             addBtn.disabled = true;
             addBtn.innerHTML = '<div class="loading-spinner"></div>Adding...';
-            
+
             try {
                 const response = await fetch('/api/add-cookie', {
                     method: 'POST',
@@ -776,9 +775,9 @@
                     },
                     body: JSON.stringify({ cookie })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     cookieInput.value = '';
                     showNotification('Cookie is being validated...', 'info');
@@ -798,9 +797,9 @@
                 const response = await fetch(`/api/refresh-cookie/${cookieId}`, {
                     method: 'POST'
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     showNotification('Cookie refreshed successfully!', 'success');
                 } else {
@@ -815,14 +814,14 @@
             if (!confirm('Are you sure you want to remove this cookie?')) {
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/api/remove-cookie/${cookieId}`, {
                     method: 'DELETE'
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     showNotification('Cookie removed successfully!', 'success');
                 } else {
@@ -851,22 +850,22 @@
             const validCountElement = document.getElementById('validCount');
             const invalidCountElement = document.getElementById('invalidCount');
             const loadingCountElement = document.getElementById('loadingCount');
-            
+
             countElement.textContent = cookies.length;
-            
+
             const validCookies = cookies.filter(c => c.isValid === true);
             const invalidCookies = cookies.filter(c => c.isValid === false);
             const loadingCookies = cookies.filter(c => c.isLoading === true || c.isValid === null);
-            
+
             validCountElement.textContent = validCookies.length;
             invalidCountElement.textContent = invalidCookies.length;
             loadingCountElement.textContent = loadingCookies.length;
-            
+
             if (cookies.length === 0) {
                 container.innerHTML = '<div class="loading">No cookies added yet. Add a cookie above to get started!</div>';
                 return;
             }
-            
+
             container.innerHTML = cookies.map(cookie => `
                 <div class="cookie-card ${cookie.isLoading ? 'loading' : (cookie.isValid ? 'valid' : 'invalid')}" data-cookie-id="${cookie.id}">
                     <div class="cookie-header">
@@ -883,7 +882,7 @@
                             ${cookie.isLoading ? 'Loading' : (cookie.isValid ? 'Valid' : 'Invalid')}
                         </span>
                     </div>
-                    
+
                     <div class="cookie-info">
                         ${cookie.isValid && !cookie.isLoading ? `
                             <div class="info-row">
@@ -930,7 +929,7 @@
                             </div>
                         `}
                     </div>
-                    
+
                     <div class="cookie-actions">
                         <button class="btn btn-success btn-small" onclick="refreshCookie('${cookie.id}')" ${cookie.isLoading ? 'disabled' : ''}>
                             🔄 Refresh
@@ -949,7 +948,7 @@
                             🗑️ Remove
                         </button>
                     </div>
-                    
+
                     <div class="last-checked">
                         ${cookie.addedAt ? `Added: ${new Date(cookie.addedAt).toLocaleString()} • ` : ''}
                         Last checked: ${new Date(cookie.lastChecked).toLocaleString()}
@@ -958,16 +957,340 @@
             `).join('');
         }
 
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            initWebSocket();
-        });
-
-        // Allow Enter key to submit cookie
-        document.getElementById('cookieInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addCookie();
+        // Initialize WebSocket connection
+        function initWebSocket() {
+            // Close existing connection if it exists
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.close();
             }
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+
+            // Determine the WebSocket URL based on the environment
+            let wsUrl;
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                // Local development: connect to the local server
+                wsUrl = `${protocol}//${window.location.host}`;
+            } else {
+                // Vercel or other deployment: connect to the API route
+                wsUrl = `${protocol}//${window.location.host}/api/ws`; // Assuming you have a /api/ws endpoint
+            }
+
+            ws = new WebSocket(wsUrl);
+
+            // Set a connection timeout
+            const connectionTimeout = setTimeout(() => {
+                if (ws.readyState === WebSocket.CONNECTING) {
+                    ws.close();
+                    console.log('WebSocket connection timeout');
+                    connectionStatus = false;
+                    updateConnectionStatus();
+                    // Fallback to polling if WebSocket fails
+                    startPolling();
+                }
+            }, 10000);
+
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+                clearTimeout(connectionTimeout);
+                connectionStatus = true;
+                updateConnectionStatus();
+                stopPolling(); // Stop polling if WebSocket connects successfully
+
+                // Send a heartbeat every 25 seconds to keep connection alive
+                if (window.heartbeatInterval) {
+                    clearInterval(window.heartbeatInterval);
+                }
+                window.heartbeatInterval = setInterval(() => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'ping' }));
+                    }
+                }, 25000);
+            };
+
+            ws.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type !== 'pong') { // Ignore pong responses
+                        handleWebSocketMessage(data);
+                    }
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            };
+
+            ws.onclose = function(event) {
+                console.log('WebSocket disconnected, attempting to reconnect...', event.code, event.reason);
+                clearTimeout(connectionTimeout);
+                if (window.heartbeatInterval) {
+                    clearInterval(window.heartbeatInterval);
+                }
+                connectionStatus = false;
+                updateConnectionStatus();
+                startPolling(); // Fallback to polling on WebSocket close
+            };
+
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                clearTimeout(connectionTimeout);
+                connectionStatus = false;
+                updateConnectionStatus();
+                startPolling(); // Fallback to polling on WebSocket error
+            };
+        }
+
+        let pollingInterval;
+
+        function loadCookies() {
+            fetch('/api/get-cookies')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        handleWebSocketMessage({ type: 'cookieList', cookies: data.cookies });
+                    } else {
+                        console.error('Failed to load cookies:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading cookies:', error);
+                });
+        }
+
+        function startPolling() {
+            if (!pollingInterval) {
+                console.log('Starting polling for cookie updates');
+                pollingInterval = setInterval(loadCookies, 5000); // Poll every 5 seconds
+                loadCookies(); // Load cookies immediately when polling starts
+            }
+        }
+
+        function stopPolling() {
+            if (pollingInterval) {
+                console.log('Stopping polling for cookie updates');
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+        }
+
+        async function addCookie() {
+            const cookieInput = document.getElementById('cookieInput');
+            const addBtn = document.getElementById('addBtn');
+            const cookie = cookieInput.value.trim();
+
+            if (!cookie) {
+                showNotification('Please enter a cookie', 'error');
+                return;
+            }
+
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<div class="loading-spinner"></div>Adding...';
+
+            try {
+                const response = await fetch('/api/add-cookie', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ cookie })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    cookieInput.value = '';
+                    showNotification('Cookie is being validated...', 'info');
+                     // If using polling, refresh the list immediately
+                    if (pollingInterval) {
+                        loadCookies();
+                    }
+
+                } else {
+                    showNotification('Failed to add cookie: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('Error adding cookie: ' + error.message, 'error');
+            } finally {
+                addBtn.disabled = false;
+                addBtn.innerHTML = 'Add Cookie';
+            }
+        }
+
+        async function refreshCookie(cookieId) {
+            try {
+                const response = await fetch(`/api/refresh-cookie/${cookieId}`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Cookie refreshed successfully!', 'success');
+                } else {
+                    showNotification('Failed to refresh cookie', 'error');
+                }
+            } catch (error) {
+                showNotification('Error refreshing cookie: ' + error.message, 'error');
+            }
+        }
+
+        async function removeCookie(cookieId) {
+            if (!confirm('Are you sure you want to remove this cookie?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/remove-cookie/${cookieId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Cookie removed successfully!', 'success');
+                } else {
+                    showNotification('Failed to remove cookie', 'error');
+                }
+            } catch (error) {
+                showNotification('Error removing cookie: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshAllCookies() {
+            showNotification('Refreshing all cookies...', 'info');
+            for (const cookie of cookies) {
+                await refreshCookie(cookie.id);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+
+        async function retryCookie(cookieId) {
+            await refreshCookie(cookieId);
+        }
+
+        function renderCookies() {
+            const container = document.getElementById('cookiesContainer');
+            const countElement = document.getElementById('cookieCount');
+            const validCountElement = document.getElementById('validCount');
+            const invalidCountElement = document.getElementById('invalidCount');
+            const loadingCountElement = document.getElementById('loadingCount');
+
+            countElement.textContent = cookies.length;
+
+            const validCookies = cookies.filter(c => c.isValid === true);
+            const invalidCookies = cookies.filter(c => c.isValid === false);
+            const loadingCookies = cookies.filter(c => c.isLoading === true || c.isValid === null);
+
+            validCountElement.textContent = validCookies.length;
+            invalidCountElement.textContent = invalidCookies.length;
+            loadingCountElement.textContent = loadingCookies.length;
+
+            if (cookies.length === 0) {
+                container.innerHTML = '<div class="loading">No cookies added yet. Add a cookie above to get started!</div>';
+                return;
+            }
+
+            container.innerHTML = cookies.map(cookie => `
+                <div class="cookie-card ${cookie.isLoading ? 'loading' : (cookie.isValid ? 'valid' : 'invalid')}" data-cookie-id="${cookie.id}">
+                    <div class="cookie-header">
+                        <div>
+                            <span class="status-indicator ${cookie.isLoading ? 'status-loading-indicator' : (cookie.isValid ? 'status-online' : 'status-offline')}"></span>
+                            <span class="cookie-username ${cookie.isValid && !cookie.isLoading ? 'copyable' : ''}" ${cookie.isValid && !cookie.isLoading ? `onclick="copyToClipboard('${cookie.username}', 'Username')"` : ''}>
+                                ${cookie.isLoading ? '<div class="loading-spinner"></div>' : ''}
+                                ${cookie.username || (cookie.isValid ? 'Loading...' : 'Invalid Cookie')}
+                                ${cookie.isPremium ? '<span class="premium-badge">Premium</span>' : ''}
+                                ${cookie.isValid && !cookie.isLoading ? '<button class="copy-btn">📋</button>' : ''}
+                            </span>
+                        </div>
+                        <span class="cookie-status ${cookie.isLoading ? 'status-loading' : (cookie.isValid ? 'status-valid' : 'status-invalid')}">
+                            ${cookie.isLoading ? 'Loading' : (cookie.isValid ? 'Valid' : 'Invalid')}
+                        </span>
+                    </div>
+
+                    <div class="cookie-info">
+                        ${cookie.isValid && !cookie.isLoading ? `
+                            <div class="info-row">
+                                <span class="info-label">User ID:</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.userId || 'N/A'}', 'User ID')">${cookie.userId || 'N/A'}<button class="copy-btn">📋</button></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Display Name:</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.displayName || 'N/A'}', 'Display Name')">${cookie.displayName || 'N/A'}<button class="copy-btn">📋</button></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Robux:</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.robux || 0}', 'Robux Amount')">💰 ${cookie.robux || 0}<button class="copy-btn">📋</button></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Followers:</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.followers || 0}', 'Followers Count')">👥 ${cookie.followers || 0}<button class="copy-btn">📋</button></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Following:</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.following || 0}', 'Following Count')">➕ ${cookie.following || 0}<button class="copy-btn">📋</button></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Account Created:</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}', 'Account Creation Date')">${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}<button class="copy-btn">📋</button></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Description:</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${(cookie.description && cookie.description.trim()) || 'No description'}', 'Account Description')">${(cookie.description && cookie.description.trim()) || 'No description'}<button class="copy-btn">📋</button></span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Cookie:</span>
+                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.fullCookie}', 'Full Cookie')">${cookie.cookie}<button class="copy-btn">📋</button></span>
+                            </div>
+                        ` : cookie.isLoading ? `
+                            <div class="info-row">
+                                <span class="info-label">Status:</span>
+                                <span class="info-value">Fetching account information...</span>
+                            </div>
+                        ` : `
+                            <div class="info-row">
+                                <span class="info-label">Error:</span>
+                                <span class="info-value">${cookie.error || 'Invalid cookie'}</span>
+                            </div>
+                        `}
+                    </div>
+
+                    <div class="cookie-actions">
+                        <button class="btn btn-success btn-small" onclick="refreshCookie('${cookie.id}')" ${cookie.isLoading ? 'disabled' : ''}>
+                            🔄 Refresh
+                        </button>
+                        ${cookie.isValid && !cookie.isLoading ? `
+                        <button class="btn btn-small" onclick="copyAllInfo('${cookie.id}')" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                            📋 Copy All
+                        </button>
+                        ` : ''}
+                        ${!cookie.isValid && !cookie.isLoading ? `
+                        <button class="btn btn-small" onclick="retryCookie('${cookie.id}')" style="background: linear-gradient(45deg, #ff9500, #ff6b00);">
+                            🔁 Retry
+                        </button>
+                        ` : ''}
+                        <button class="btn btn-danger btn-small" onclick="removeCookie('${cookie.id}')" ${cookie.isLoading ? 'disabled' : ''}>
+                            🗑️ Remove
+                        </button>
+                    </div>
+
+                    <div class="last-checked">
+                        ${cookie.addedAt ? `Added: ${new Date(cookie.addedAt).toLocaleString()} • ` : ''}
+                        Last checked: ${new Date(cookie.lastChecked).toLocaleString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Try WebSocket first, will fall back to polling if needed
+            initWebSocket();
+
+            // Allow Enter key to submit cookie
+            document.getElementById('cookieInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addCookie();
+                }
+            });
         });
 
         // Copy to clipboard functionality
@@ -986,7 +1309,7 @@
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
-                
+
                 try {
                     document.execCommand('copy');
                     showCopySuccess(`${label} copied to clipboard!`);
@@ -994,7 +1317,7 @@
                 } catch (fallbackErr) {
                     showNotification('Failed to copy to clipboard', 'error');
                 }
-                
+
                 document.body.removeChild(textArea);
             }
         }
@@ -1004,7 +1327,7 @@
             successDiv.className = 'copy-success';
             successDiv.textContent = message;
             document.body.appendChild(successDiv);
-            
+
             setTimeout(() => {
                 document.body.removeChild(successDiv);
             }, 2000);
@@ -1022,7 +1345,7 @@
                 </div>
             `;
             document.body.appendChild(autoAlert);
-            
+
             setTimeout(() => {
                 if (document.body.contains(autoAlert)) {
                     document.body.removeChild(autoAlert);
@@ -1033,7 +1356,7 @@
         async function copyAllInfo(cookieId) {
             const cookie = cookies.find(c => c.id === cookieId);
             if (!cookie || !cookie.isValid) return;
-            
+
             const allInfo = `
 === Roblox Account Information ===
 Username: ${cookie.username || 'N/A'}
@@ -1049,7 +1372,7 @@ Cookie: ${cookie.fullCookie || 'N/A'}
 Last Checked: ${new Date(cookie.lastChecked).toLocaleString()}
 Added At: ${cookie.addedAt ? new Date(cookie.addedAt).toLocaleString() : 'N/A'}
             `.trim();
-            
+
             await copyToClipboard(allInfo, 'All account information');
         }
 
@@ -1060,9 +1383,9 @@ Added At: ${cookie.addedAt ? new Date(cookie.addedAt).toLocaleString() : 'N/A'}
                 showNotification('No valid cookies to copy', 'warning');
                 return;
             }
-            
+
             let allCookiesInfo = '=== All Roblox Accounts Information ===\n\n';
-            
+
             validCookies.forEach((cookie, index) => {
                 allCookiesInfo += `--- Account ${index + 1} ---\n`;
                 allCookiesInfo += `Username: ${cookie.username || 'N/A'}\n`;
@@ -1075,7 +1398,7 @@ Added At: ${cookie.addedAt ? new Date(cookie.addedAt).toLocaleString() : 'N/A'}
                 allCookiesInfo += `Cookie: ${cookie.fullCookie || 'N/A'}\n`;
                 allCookiesInfo += `\n`;
             });
-            
+
             await copyToClipboard(allCookiesInfo, `Information for ${validCookies.length} accounts`);
         }
     </script>
