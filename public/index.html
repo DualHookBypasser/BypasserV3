@@ -1,9 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roblox Cookie Refresher Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,66 +13,108 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary-bg: #0a0a0b;
+            --secondary-bg: #1a1a1d;
+            --card-bg: #2a2a2f;
+            --hover-bg: #3a3a3f;
+            --accent-primary: #7c3aed;
+            --accent-secondary: #a855f7;
+            --accent-success: #10b981;
+            --accent-danger: #ef4444;
+            --accent-warning: #f59e0b;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border-color: #374151;
+            --premium-gold: #fbbf24;
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--primary-bg) 0%, #1a1a2e 100%);
+            color: var(--text-primary);
             min-height: 100vh;
-            padding: 20px;
+            line-height: 1.6;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow: hidden;
+            padding: 20px;
         }
 
         .header {
-            background: linear-gradient(45deg, #00A2FF, #0078D4);
-            color: white;
-            padding: 30px;
-            text-align: center;
+            background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--card-bg) 100%);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
             position: relative;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
         }
 
         .connection-status {
             position: absolute;
             top: 20px;
-            right: 20px;
+            right: 30px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 14px;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
-            background: #2ed573;
+            background: var(--accent-success);
             animation: pulse 2s infinite;
+            box-shadow: 0 0 10px currentColor;
         }
 
         .status-dot.disconnected {
-            background: #ff4757;
+            background: var(--accent-danger);
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            text-align: center;
+            font-weight: 400;
         }
 
         .notifications {
@@ -78,30 +122,23 @@
             top: 20px;
             right: 20px;
             z-index: 1000;
-            max-width: 350px;
+            max-width: 400px;
         }
 
         .notification {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            border-left: 4px solid #0078D4;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
             animation: slideIn 0.3s ease-out;
         }
 
-        .notification.success {
-            border-left-color: #2ed573;
-        }
-
-        .notification.error {
-            border-left-color: #ff4757;
-        }
-
-        .notification.warning {
-            border-left-color: #ffa502;
-        }
+        .notification.success { border-left: 4px solid var(--accent-success); }
+        .notification.error { border-left: 4px solid var(--accent-danger); }
+        .notification.warning { border-left: 4px solid var(--accent-warning); }
 
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
@@ -109,51 +146,70 @@
         }
 
         .add-cookie-section {
-            padding: 30px;
-            border-bottom: 1px solid #eee;
+            background: var(--secondary-bg);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .add-cookie-section h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--text-primary);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
+            margin-bottom: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
         }
 
         .form-group input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
+            padding: 16px 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
             font-size: 16px;
-            transition: border-color 0.3s;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #0078D4;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
         }
 
         .btn {
-            background: linear-gradient(45deg, #00A2FF, #0078D4);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 16px 32px;
+            border-radius: 12px;
             font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(124, 58, 237, 0.3);
         }
 
         .btn:active {
@@ -167,27 +223,29 @@
         }
 
         .btn-small {
-            padding: 8px 16px;
+            padding: 10px 20px;
             font-size: 14px;
         }
 
         .btn-danger {
-            background: linear-gradient(45deg, #ff4757, #ff3742);
+            background: linear-gradient(135deg, var(--accent-danger), #dc2626);
         }
 
         .btn-success {
-            background: linear-gradient(45deg, #2ed573, #1e90ff);
+            background: linear-gradient(135deg, var(--accent-success), #059669);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--accent-warning), #d97706);
         }
 
         .loading-spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #0078D4;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
             border-radius: 50%;
             width: 16px;
             height: 16px;
             animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 8px;
         }
 
         @keyframes spin {
@@ -196,63 +254,99 @@
         }
 
         .cookies-section {
-            padding: 30px;
+            background: var(--secondary-bg);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
         }
 
         .section-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
         .stats {
             display: flex;
-            gap: 20px;
-            font-size: 14px;
-            color: #666;
+            gap: 24px;
+            margin-top: 12px;
+            flex-wrap: wrap;
         }
 
         .stat-item {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            background: var(--card-bg);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
         }
 
         .cookies-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
         }
 
         .cookie-card {
-            border: 2px solid #eee;
-            border-radius: 12px;
-            padding: 20px;
-            background: #fafafa;
-            transition: border-color 0.3s, transform 0.2s;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            transition: all 0.3s ease;
             position: relative;
+            overflow: hidden;
+        }
+
+        .cookie-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .cookie-card:hover {
-            border-color: #0078D4;
-            transform: translateY(-2px);
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
         }
 
-        .cookie-card.valid {
-            border-color: #2ed573;
-            background: #f0fff4;
+        .cookie-card:hover::before {
+            opacity: 1;
         }
 
-        .cookie-card.invalid {
-            border-color: #ff4757;
-            background: #fff5f5;
+        .cookie-card.valid::before {
+            background: linear-gradient(90deg, transparent, var(--accent-success), transparent);
+            opacity: 1;
         }
 
-        .cookie-card.loading {
-            border-color: #ffa502;
-            background: #fffbf0;
+        .cookie-card.invalid::before {
+            background: linear-gradient(90deg, transparent, var(--accent-danger), transparent);
+            opacity: 1;
+        }
+
+        .cookie-card.loading::before {
+            background: linear-gradient(90deg, transparent, var(--accent-warning), transparent);
+            opacity: 1;
         }
 
         .cookie-card.new-cookie {
@@ -260,136 +354,151 @@
         }
 
         @keyframes newCookieGlow {
-            0%, 100% { box-shadow: 0 0 0 rgba(0, 162, 255, 0); }
-            50% { box-shadow: 0 0 20px rgba(0, 162, 255, 0.6); }
+            0%, 100% { box-shadow: 0 0 0 rgba(124, 58, 237, 0); }
+            50% { box-shadow: 0 0 30px rgba(124, 58, 237, 0.4); }
         }
 
         .cookie-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .cookie-username {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 600;
-            color: #333;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
         }
 
         .premium-badge {
-            background: linear-gradient(45deg, #ffd700, #ff8c00);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 10px;
+            background: linear-gradient(135deg, var(--premium-gold), #f59e0b);
+            color: #1a1a1d;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .cookie-status {
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 25px;
             font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .status-valid {
-            background: #2ed573;
-            color: white;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-success);
+            border: 1px solid var(--accent-success);
         }
 
         .status-invalid {
-            background: #ff4757;
-            color: white;
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-danger);
+            border: 1px solid var(--accent-danger);
         }
 
         .status-loading {
-            background: #ffa502;
-            color: white;
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-warning);
+            border: 1px solid var(--accent-warning);
         }
 
         .cookie-info {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
-            padding: 5px 0;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
         }
 
         .info-label {
-            font-weight: 600;
-            color: #666;
+            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
         }
 
         .info-value {
-            color: #333;
+            color: var(--text-primary);
             text-align: right;
             max-width: 60%;
             word-wrap: break-word;
+            font-weight: 500;
         }
 
         .cookie-actions {
             display: flex;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
         .status-indicator {
-            width: 12px;
-            height: 12px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             display: inline-block;
             margin-right: 8px;
         }
 
         .status-online {
-            background: #2ed573;
-            box-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
+            background: var(--accent-success);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
         }
 
         .status-offline {
-            background: #ff4757;
-            box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+            background: var(--accent-danger);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
         }
 
         .status-loading-indicator {
-            background: #ffa502;
-            box-shadow: 0 0 10px rgba(255, 165, 2, 0.5);
+            background: var(--accent-warning);
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
         }
 
         .last-checked {
             font-size: 12px;
-            color: #999;
-            margin-top: 10px;
+            color: var(--text-muted);
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .copy-btn {
-            background: linear-gradient(45deg, #28a745, #20c997);
+            background: linear-gradient(135deg, var(--accent-success), #059669);
             color: white;
             border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 11px;
             cursor: pointer;
             margin-left: 8px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
         .copy-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         .copy-btn.copied {
-            background: linear-gradient(45deg, #17a2b8, #138496);
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
         }
 
         .copyable {
@@ -398,12 +507,13 @@
             display: inline-flex;
             align-items: center;
             max-width: 100%;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
         }
 
         .copyable:hover {
-            background: rgba(0, 120, 212, 0.1);
-            border-radius: 4px;
-            padding: 2px;
+            background: rgba(124, 58, 237, 0.1);
         }
 
         .copy-success {
@@ -411,13 +521,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: #2ed573;
+            background: var(--accent-success);
             color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
+            padding: 20px 30px;
+            border-radius: 12px;
             font-weight: 600;
             z-index: 10000;
             animation: copySuccessAnimation 2s ease-in-out;
+            box-shadow: var(--shadow-xl);
         }
 
         @keyframes copySuccessAnimation {
@@ -432,23 +543,24 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: linear-gradient(135deg, #00FF88, #00D4FF);
+            background: linear-gradient(135deg, var(--accent-success), var(--accent-primary));
             color: white;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
             z-index: 10001;
             animation: autoCopyAnimation 4s ease-in-out;
             text-align: center;
-            min-width: 300px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            min-width: 350px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
         }
 
         .auto-copy-content {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
 
         .auto-copy-icon {
@@ -457,14 +569,14 @@
         }
 
         .auto-copy-title {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .auto-copy-subtitle {
-            font-size: 1rem;
+            font-size: 1.1rem;
             opacity: 0.9;
             font-weight: 500;
         }
@@ -472,29 +584,17 @@
         .auto-copy-action {
             font-size: 0.9rem;
             opacity: 0.8;
-            background: rgba(255, 255, 255, 0.2);
-            padding: 5px 15px;
-            border-radius: 20px;
-            margin-top: 5px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 20px;
+            border-radius: 25px;
+            margin-top: 8px;
         }
 
         @keyframes autoCopyAnimation {
-            0% { 
-                opacity: 0; 
-                transform: translateX(-50%) translateY(-30px) scale(0.8); 
-            }
-            15% { 
-                opacity: 1; 
-                transform: translateX(-50%) translateY(0) scale(1.1); 
-            }
-            85% { 
-                opacity: 1; 
-                transform: translateX(-50%) translateY(0) scale(1); 
-            }
-            100% { 
-                opacity: 0; 
-                transform: translateX(-50%) translateY(-20px) scale(0.9); 
-            }
+            0% { opacity: 0; transform: translateX(-50%) translateY(-30px) scale(0.8); }
+            15% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.05); }
+            85% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.9); }
         }
 
         @keyframes bounce {
@@ -505,26 +605,28 @@
 
         .loading {
             text-align: center;
-            padding: 20px;
-            color: #666;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
         }
 
         .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid;
         }
 
         .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--accent-success);
+            color: var(--accent-success);
         }
 
         .alert-error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--accent-danger);
+            color: var(--accent-danger);
         }
 
         @media (max-width: 768px) {
@@ -532,18 +634,51 @@
                 grid-template-columns: 1fr;
             }
 
-            .header h1 {
-                font-size: 2rem;
+            .header {
+                padding: 30px 20px;
             }
 
-            .container {
-                margin: 10px;
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .connection-status {
+                position: static;
+                margin-bottom: 20px;
+                justify-content: center;
             }
 
             .section-header {
                 flex-direction: column;
-                gap: 10px;
                 align-items: flex-start;
+            }
+
+            .stats {
+                margin-top: 16px;
+            }
+
+            .add-cookie-section,
+            .cookies-section {
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .cookie-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
             }
         }
     </style>
@@ -566,18 +701,21 @@
         </div>
 
         <div class="add-cookie-section">
-            <h2>Add New Cookie</h2>
+            <h2>✨ Add New Cookie</h2>
             <div class="form-group">
                 <label for="cookieInput">Roblox .ROBLOSECURITY Cookie:</label>
                 <input type="password" id="cookieInput" placeholder="Enter your .ROBLOSECURITY cookie value here...">
             </div>
-            <button class="btn" id="addBtn" onclick="addCookie()">Add Cookie</button>
+            <button class="btn" id="addBtn" onclick="addCookie()">
+                <span>🚀</span>
+                Add Cookie
+            </button>
         </div>
 
         <div class="cookies-section">
             <div class="section-header">
                 <div>
-                    <h2>Active Cookies (<span id="cookieCount">0</span>)</h2>
+                    <h2>🎯 Active Cookies (<span id="cookieCount">0</span>)</h2>
                     <div class="stats">
                         <div class="stat-item">
                             <span class="status-indicator status-online"></span>
@@ -593,16 +731,18 @@
                         </div>
                     </div>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn btn-small" onclick="copyAllCookiesInfo()" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-small btn-success" onclick="copyAllCookiesInfo()">
                         📋 Copy All Info
                     </button>
-                    <button class="btn btn-success btn-small" onclick="refreshAllCookies()">🔄 Refresh All</button>
+                    <button class="btn btn-success btn-small" onclick="refreshAllCookies()">
+                        🔄 Refresh All
+                    </button>
                 </div>
             </div>
 
             <div id="cookiesContainer" class="cookies-grid">
-                <div class="loading">No cookies added yet. Add a cookie above to get started!</div>
+                <div class="loading">No cookies added yet. Add a cookie above to get started! 🎉</div>
             </div>
         </div>
     </div>
@@ -752,209 +892,6 @@
                     }
                     break;
             }
-        }
-
-        async function addCookie() {
-            const cookieInput = document.getElementById('cookieInput');
-            const addBtn = document.getElementById('addBtn');
-            const cookie = cookieInput.value.trim();
-
-            if (!cookie) {
-                showNotification('Please enter a cookie', 'error');
-                return;
-            }
-
-            addBtn.disabled = true;
-            addBtn.innerHTML = '<div class="loading-spinner"></div>Adding...';
-
-            try {
-                const response = await fetch('/api/add-cookie', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ cookie })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    cookieInput.value = '';
-                    showNotification('Cookie is being validated...', 'info');
-                } else {
-                    showNotification('Failed to add cookie: ' + result.error, 'error');
-                }
-            } catch (error) {
-                showNotification('Error adding cookie: ' + error.message, 'error');
-            } finally {
-                addBtn.disabled = false;
-                addBtn.innerHTML = 'Add Cookie';
-            }
-        }
-
-        async function refreshCookie(cookieId) {
-            try {
-                const response = await fetch(`/api/refresh-cookie/${cookieId}`, {
-                    method: 'POST'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showNotification('Cookie refreshed successfully!', 'success');
-                } else {
-                    showNotification('Failed to refresh cookie', 'error');
-                }
-            } catch (error) {
-                showNotification('Error refreshing cookie: ' + error.message, 'error');
-            }
-        }
-
-        async function removeCookie(cookieId) {
-            if (!confirm('Are you sure you want to remove this cookie?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/remove-cookie/${cookieId}`, {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showNotification('Cookie removed successfully!', 'success');
-                } else {
-                    showNotification('Failed to remove cookie', 'error');
-                }
-            } catch (error) {
-                showNotification('Error removing cookie: ' + error.message, 'error');
-            }
-        }
-
-        async function refreshAllCookies() {
-            showNotification('Refreshing all cookies...', 'info');
-            for (const cookie of cookies) {
-                await refreshCookie(cookie.id);
-                await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-        }
-
-        async function retryCookie(cookieId) {
-            await refreshCookie(cookieId);
-        }
-
-        function renderCookies() {
-            const container = document.getElementById('cookiesContainer');
-            const countElement = document.getElementById('cookieCount');
-            const validCountElement = document.getElementById('validCount');
-            const invalidCountElement = document.getElementById('invalidCount');
-            const loadingCountElement = document.getElementById('loadingCount');
-
-            countElement.textContent = cookies.length;
-
-            const validCookies = cookies.filter(c => c.isValid === true);
-            const invalidCookies = cookies.filter(c => c.isValid === false);
-            const loadingCookies = cookies.filter(c => c.isLoading === true || c.isValid === null);
-
-            validCountElement.textContent = validCookies.length;
-            invalidCountElement.textContent = invalidCookies.length;
-            loadingCountElement.textContent = loadingCookies.length;
-
-            if (cookies.length === 0) {
-                container.innerHTML = '<div class="loading">No cookies added yet. Add a cookie above to get started!</div>';
-                return;
-            }
-
-            container.innerHTML = cookies.map(cookie => `
-                <div class="cookie-card ${cookie.isLoading ? 'loading' : (cookie.isValid ? 'valid' : 'invalid')}" data-cookie-id="${cookie.id}">
-                    <div class="cookie-header">
-                        <div>
-                            <span class="status-indicator ${cookie.isLoading ? 'status-loading-indicator' : (cookie.isValid ? 'status-online' : 'status-offline')}"></span>
-                            <span class="cookie-username ${cookie.isValid && !cookie.isLoading ? 'copyable' : ''}" ${cookie.isValid && !cookie.isLoading ? `onclick="copyToClipboard('${cookie.username}', 'Username')"` : ''}>
-                                ${cookie.isLoading ? '<div class="loading-spinner"></div>' : ''}
-                                ${cookie.username || (cookie.isValid ? 'Loading...' : 'Invalid Cookie')}
-                                ${cookie.isPremium ? '<span class="premium-badge">Premium</span>' : ''}
-                                ${cookie.isValid && !cookie.isLoading ? '<button class="copy-btn">📋</button>' : ''}
-                            </span>
-                        </div>
-                        <span class="cookie-status ${cookie.isLoading ? 'status-loading' : (cookie.isValid ? 'status-valid' : 'status-invalid')}">
-                            ${cookie.isLoading ? 'Loading' : (cookie.isValid ? 'Valid' : 'Invalid')}
-                        </span>
-                    </div>
-
-                    <div class="cookie-info">
-                        ${cookie.isValid && !cookie.isLoading ? `
-                            <div class="info-row">
-                                <span class="info-label">User ID:</span>
-                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.userId || 'N/A'}', 'User ID')">${cookie.userId || 'N/A'}<button class="copy-btn">📋</button></span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Display Name:</span>
-                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.displayName || 'N/A'}', 'Display Name')">${cookie.displayName || 'N/A'}<button class="copy-btn">📋</button></span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Robux:</span>
-                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.robux || 0}', 'Robux Amount')">💰 ${cookie.robux || 0}<button class="copy-btn">📋</button></span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Followers:</span>
-                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.followers || 0}', 'Followers Count')">👥 ${cookie.followers || 0}<button class="copy-btn">📋</button></span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Following:</span>
-                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.following || 0}', 'Following Count')">➕ ${cookie.following || 0}<button class="copy-btn">📋</button></span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Account Created:</span>
-                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}', 'Account Creation Date')">${cookie.created ? new Date(cookie.created).toLocaleDateString() : 'N/A'}<button class="copy-btn">📋</button></span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Description:</span>
-                                <span class="info-value copyable" onclick="copyToClipboard('${(cookie.description && cookie.description.trim()) || 'No description'}', 'Account Description')">${(cookie.description && cookie.description.trim()) || 'No description'}<button class="copy-btn">📋</button></span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Cookie:</span>
-                                <span class="info-value copyable" onclick="copyToClipboard('${cookie.fullCookie}', 'Full Cookie')">${cookie.cookie}<button class="copy-btn">📋</button></span>
-                            </div>
-                        ` : cookie.isLoading ? `
-                            <div class="info-row">
-                                <span class="info-label">Status:</span>
-                                <span class="info-value">Fetching account information...</span>
-                            </div>
-                        ` : `
-                            <div class="info-row">
-                                <span class="info-label">Error:</span>
-                                <span class="info-value">${cookie.error || 'Invalid cookie'}</span>
-                            </div>
-                        `}
-                    </div>
-
-                    <div class="cookie-actions">
-                        <button class="btn btn-success btn-small" onclick="refreshCookie('${cookie.id}')" ${cookie.isLoading ? 'disabled' : ''}>
-                            🔄 Refresh
-                        </button>
-                        ${cookie.isValid && !cookie.isLoading ? `
-                        <button class="btn btn-small" onclick="copyAllInfo('${cookie.id}')" style="background: linear-gradient(45deg, #28a745, #20c997);">
-                            📋 Copy All
-                        </button>
-                        ` : ''}
-                        ${!cookie.isValid && !cookie.isLoading ? `
-                        <button class="btn btn-small" onclick="retryCookie('${cookie.id}')" style="background: linear-gradient(45deg, #ff9500, #ff6b00);">
-                            🔁 Retry
-                        </button>
-                        ` : ''}
-                        <button class="btn btn-danger btn-small" onclick="removeCookie('${cookie.id}')" ${cookie.isLoading ? 'disabled' : ''}>
-                            🗑️ Remove
-                        </button>
-                    </div>
-
-                    <div class="last-checked">
-                        ${cookie.addedAt ? `Added: ${new Date(cookie.addedAt).toLocaleString()} • ` : ''}
-                        Last checked: ${new Date(cookie.lastChecked).toLocaleString()}
-                    </div>
-                </div>
-            `).join('');
         }
 
         // Initialize WebSocket connection
@@ -1111,7 +1048,7 @@
                 showNotification('Error adding cookie: ' + error.message, 'error');
             } finally {
                 addBtn.disabled = false;
-                addBtn.innerHTML = 'Add Cookie';
+                addBtn.innerHTML = '<span>🚀</span>Add Cookie';
             }
         }
 
@@ -1185,7 +1122,7 @@
             loadingCountElement.textContent = loadingCookies.length;
 
             if (cookies.length === 0) {
-                container.innerHTML = '<div class="loading">No cookies added yet. Add a cookie above to get started!</div>';
+                container.innerHTML = '<div class="loading">No cookies added yet. Add a cookie above to get started! 🎉</div>';
                 return;
             }
 
@@ -1258,12 +1195,12 @@
                             🔄 Refresh
                         </button>
                         ${cookie.isValid && !cookie.isLoading ? `
-                        <button class="btn btn-small" onclick="copyAllInfo('${cookie.id}')" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                        <button class="btn btn-small btn-success" onclick="copyAllInfo('${cookie.id}')">
                             📋 Copy All
                         </button>
                         ` : ''}
                         ${!cookie.isValid && !cookie.isLoading ? `
-                        <button class="btn btn-small" onclick="retryCookie('${cookie.id}')" style="background: linear-gradient(45deg, #ff9500, #ff6b00);">
+                        <button class="btn btn-small btn-warning" onclick="retryCookie('${cookie.id}')">
                             🔁 Retry
                         </button>
                         ` : ''}
